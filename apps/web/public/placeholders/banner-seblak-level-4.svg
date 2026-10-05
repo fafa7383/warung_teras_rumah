@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-label="Seblak Level 4 Berani Coba?">
+  <defs><clipPath id="frame"><rect width="800" height="400" rx="0"/></clipPath></defs>
+  <g clip-path="url(#frame)">
+  <rect width="800" height="400" fill="#E14B4B"/>
+  <circle cx="720" cy="360" r="170" fill="#C23838"/>
+  <circle cx="40" cy="20" r="90" fill="#FFD9C4" opacity="0.25"/>
+  <text x="56" y="140" font-family="Fredoka, Nunito, system-ui, sans-serif" font-weight="600" font-size="60" fill="#FFFFFF">Seblak Level 4</text>
+  <text x="56" y="214" font-family="Fredoka, Nunito, system-ui, sans-serif" font-weight="600" font-size="50" fill="#FFD9C4">Berani Coba?</text>
+  <text x="56" y="272" font-family="Nunito, system-ui, sans-serif" font-weight="700" font-size="26" fill="#FFF3F1">Pedasnya nampol, bikin nagih.</text>
+  <g transform="translate(560 120)" fill="#F6B94A" stroke="#2E2320" stroke-width="6" stroke-linejoin="round">
+    <path d="M20 40 C 40 140, 120 180, 170 170 C 110 140, 80 90, 70 40 Z"/>
+    <path d="M60 30 C 60 0, 80 -10, 95 -5" fill="none" stroke="#2F9E6B" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  </g>
+</svg>

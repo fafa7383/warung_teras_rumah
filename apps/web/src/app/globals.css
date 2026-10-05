@@ -1,0 +1,140 @@
+@import 'tailwindcss';
+
+/*
+ * Design token Warung Teras Rumah (PRD Bagian 3). Light mode saja.
+ *
+ * Nama token PRD → utilitas Tailwind:
+ *   primary-50/100/600/700, accent-400, peach-200 → bg-primary-600, text-primary-700, …
+ *   bg → cream (bg-cream)          surface → surface (bg-surface)    border → line (border-line)
+ *   text-primary → ink (text-ink)  text-secondary → ink-muted         text-disabled → ink-disabled
+ *   success/warning/info/danger (+ -100 untuk latar badge)
+ */
+@theme {
+  --color-primary-50: #fff3f1;
+  --color-primary-100: #fde7e4;
+  --color-primary-600: #e14b4b;
+  --color-primary-700: #c23838;
+  --color-accent-400: #f6b94a;
+  --color-peach-200: #ffd9c4;
+
+  --color-cream: #fff9f4;
+  --color-surface: #ffffff;
+  --color-line: #f1e3da;
+
+  --color-ink: #2e2320;
+  --color-ink-muted: #7a6862;
+  --color-ink-disabled: #b9aaa4;
+
+  --color-success: #2f9e6b;
+  --color-success-100: #e3f5ec;
+  --color-warning: #e8962e;
+  --color-warning-100: #fdf1df;
+  --color-info: #3e7fd6;
+  --color-info-100: #e5effb;
+  --color-danger: #b3261e;
+  --color-danger-100: #fbe4e2;
+
+  /* Skala tipografi (PRD 3.2). Pakai bersama font-display untuk judul. */
+  --text-display: 28px;
+  --text-display--line-height: 34px;
+  --text-display--font-weight: 600;
+  --text-h1: 22px;
+  --text-h1--line-height: 28px;
+  --text-h1--font-weight: 600;
+  --text-h2: 18px;
+  --text-h2--line-height: 24px;
+  --text-h2--font-weight: 600;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 24px;
+  --text-body-lg--font-weight: 600;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-caption--font-weight: 600;
+  --text-price: 16px;
+  --text-price--line-height: 20px;
+  --text-price--font-weight: 800;
+
+  /* Radius (PRD 3.3): input & tombol, kartu, bottom sheet. Chip & badge memakai rounded-full. */
+  --radius-control: 14px;
+  --radius-card: 18px;
+  --radius-sheet: 24px;
+
+  /* Bayangan bernuansa merah hangat, bukan abu-abu. */
+  --shadow-card: 0 4px 16px rgba(194, 56, 56, 0.08);
+  --shadow-nav: 0 -4px 20px rgba(46, 35, 32, 0.06);
+
+  /* Gerak (PRD 3.5): durasi pakai duration-150 / duration-250 / duration-350. */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-splash: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Ukuran tata letak: h-header, h-nav, h-cta, max-w-content. */
+  --spacing-header: 56px;
+  --spacing-nav: 64px;
+  --spacing-cta: 52px;
+  --container-content: 1200px;
+
+  --animate-shimmer: shimmer 1.4s linear infinite;
+
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+
+/* Font dari next/font (layout.tsx) dengan fallback PRD 3.2. */
+@theme inline {
+  --font-display: var(--font-fredoka), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: var(--font-nunito), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-cream font-sans text-body text-ink antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Input minimal 16px agar iOS tidak auto-zoom (PRD 3.2). */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary-600);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Skeleton krem dengan shimmer (PRD 3.6). */
+@utility skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-line) 0%,
+    var(--color-primary-50) 50%,
+    var(--color-line) 100%
+  );
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "warung-teras-rumah",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Website pemesanan online Warung Teras Rumah (PWA pembeli + dashboard admin).",
+  "packageManager": "pnpm@12.9.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @wtr/api --filter @wtr/web --parallel dev",
+    "dev:web": "pnpm --filter @wtr/web dev",
+    "dev:api": "pnpm --filter @wtr/api dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @wtr/api db:generate",
+    "db:migrate": "pnpm --filter @wtr/api db:migrate",
+    "db:deploy": "pnpm --filter @wtr/api db:deploy",
+    "db:seed": "pnpm --filter @wtr/api db:seed",
+    "db:studio": "pnpm --filter @wtr/api db:studio",
+    "storage:setup": "pnpm --filter @wtr/api storage:setup",
+    "vapid:generate": "pnpm --filter @wtr/api vapid:generate"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.9",
+    "prettier-plugin-tailwindcss": "^0.8.1"
+  }
+}

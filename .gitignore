@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# prisma client hasil generate
+apps/api/src/generated/
+
+# env (yang di-commit hanya .env.example)
+.env
+.env.*
+!.env.example
+
+# logs & misc
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db
+coverage/
+.vercel/
+.turbo/
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/

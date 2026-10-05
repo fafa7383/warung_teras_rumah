@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-label="Paket Bakso + Es Teh">
+  <defs><clipPath id="frame"><rect width="800" height="400" rx="0"/></clipPath></defs>
+  <g clip-path="url(#frame)">
+  <rect width="800" height="400" fill="#FFF3F1"/>
+  <circle cx="650" cy="230" r="200" fill="#FDE7E4"/>
+  <text x="56" y="150" font-family="Fredoka, Nunito, system-ui, sans-serif" font-weight="600" font-size="62" fill="#C23838">Paket Bakso</text>
+  <text x="56" y="222" font-family="Fredoka, Nunito, system-ui, sans-serif" font-weight="600" font-size="50" fill="#2E2320">+ Es Teh</text>
+  <text x="56" y="280" font-family="Nunito, system-ui, sans-serif" font-weight="700" font-size="26" fill="#7A6862">Hangat di perut, segar di hati.</text>
+  <g transform="translate(470 190)">
+    <path d="M0 40 H200 A100 100 0 0 1 0 40 Z" fill="#E14B4B"/>
+    <path d="M20 58 H180" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 10"/>
+    <circle cx="60" cy="28" r="22" fill="#8A5A3C"/>
+    <circle cx="105" cy="20" r="24" fill="#9C6644"/>
+    <circle cx="150" cy="30" r="20" fill="#8A5A3C"/>
+    <path d="M70 -20 q10 -15 0 -30 M105 -30 q10 -15 0 -30 M140 -20 q10 -15 0 -30" fill="none" stroke="#C23838" stroke-width="5" stroke-linecap="round" opacity="0.5"/>
+  </g>
+  <g transform="translate(690 190)">
+    <path d="M0 0 H70 L60 130 H10 Z" fill="#F6B94A" stroke="#2E2320" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M6 40 H64" stroke="#FFFFFF" stroke-width="5" opacity="0.7"/>
+    <path d="M48 -30 L40 60" stroke="#2F9E6B" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  </g>
+</svg>
