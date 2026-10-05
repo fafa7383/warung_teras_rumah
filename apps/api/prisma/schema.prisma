@@ -208,6 +208,8 @@ model OrderItem {
   unitPrice         Int      @map("unit_price")
   quantity          Int
   lineTotal         Int      @map("line_total")
+  /// Urutan tampil sesuai keranjang pembeli.
+  sortOrder         Int      @default(0) @map("sort_order")
   order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   menuItem          MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
 

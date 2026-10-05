@@ -70,7 +70,8 @@ Spesifikasi lengkap ada di [PRD](./PRD%20—%20Website%20Pemesanan%20Warung%20Te
    pnpm dev
    ```
 
-   - Web: http://localhost:3000 (halaman cek setup: token desain + status API)
+   - Web pembeli: http://localhost:3000
+   - Dashboard admin: http://localhost:3000/admin (login dengan `ADMIN_SEED_USERNAME` / `ADMIN_SEED_PASSWORD`)
    - API: http://localhost:4000/health → `{"status":"ok","database":"ok"}`
 
 ## Perintah lain
@@ -103,28 +104,55 @@ Variabel: `NEXT_PUBLIC_API_URL=https://api.warungterasrumah.com` dan `NEXT_PUBLI
 **Cloudflare Turnstile** — buat widget mode _Managed_ untuk hostname `warungterasrumah.com`
 (+ `localhost` bila ingin menguji kunci asli di lokal).
 
+## Halaman
+
+| Pembeli | Admin (`/admin`) |
+| --- | --- |
+| `/` Splash (sekali per sesi) → Home | `/admin/login` |
+| `/menu`, `/menu/[slug]` (Detail Menu: bottom sheet, URL bisa dibagikan) | `/admin` Pesanan (switch Terima Pesanan, ringkasan, tab, list-detail di desktop) |
+| `/keranjang` Keranjang + Checkout | `/admin/pesanan/[id]` Detail, bukti QRIS, Tolak/Konfirmasi |
+| `/pesanan/[token]` Status + bayar QRIS, `/pesanan/[token]/struk` | `/admin/menu`, `/admin/menu/baru`, `/admin/menu/[id]` |
+| `/riwayat`, `/cek-pesanan`, `/offline` | `/admin/laporan`, `/admin/pengaturan/*` |
+
+## Desain
+
+Gaya iOS/Apple: navigation bar judul besar yang mengecil saat di-scroll, list grouped seperti aplikasi Settings,
+bottom sheet dengan grabber (tarik ke bawah untuk menutup), segmented control, switch & stepper iOS, tab bar kaca
+mengambang, dan font SF Pro di perangkat Apple (Inter sebagai pengganti di Android/Windows). Merah warung tetap
+menjadi warna aksen. Semua token ada di `apps/web/src/app/globals.css`; komponen dasar di `apps/web/src/components/ui`.
+Ilustrasi mangkok (splash, ikon kategori, pengganti foto menu) adalah SVG di `components/brand/food-art.tsx`.
+
 ## Catatan keputusan teknis
 
-Penyesuaian kecil terhadap PRD 10.1 berdasarkan versi paket terbaru (Oktober 2026):
+Penyesuaian terhadap PRD berdasarkan versi paket terbaru (Oktober 2026):
 
+- **Gaya visual iOS** menggantikan gaya hangat/Fredoka di PRD Bagian 3 (permintaan pemilik). Fitur & alur tetap.
+  Warna aksen `#D63C3C` sedikit lebih gelap dari merah logo `#E14B4B` agar teks putih lolos kontras AA.
 - **Prisma 7**: URL database untuk CLI ada di `apps/api/prisma.config.ts` (memakai `DIRECT_URL`), runtime memakai
   `DATABASE_URL` lewat `@prisma/adapter-pg`. Client di-generate ke `apps/api/src/generated` (tidak di-commit).
   Seed tidak lagi otomatis setelah migrate, jadi jalankan `pnpm db:seed`.
 - **bcryptjs** (bukan `bcrypt`): algoritma & cost 12 sama, tanpa kompilasi native (lebih aman di Windows/Railway).
 - **`motion`** adalah nama baru paket Framer Motion (`import { motion } from 'motion/react'`).
 - **TypeScript 6.0**: TypeScript 7 belum didukung typescript-eslint.
-- **Serwist (PWA)** dipasang di Hari 6, karena integrasinya dengan Turbopack (default Next 16) perlu diuji tersendiri.
-- **`admin_users.token_version`** ditambahkan agar ganti password otomatis mengeluarkan sesi lama.
-- **Token warna**: nama PRD `bg`, `border`, `text-*` menjadi utilitas `cream`, `line`, `ink*` agar tidak bentrok
-  dengan nama utilitas Tailwind (pemetaan lengkap di `apps/web/src/app/globals.css`).
+- **Service worker ditulis manual** (`apps/web/public/sw.js`) menggantikan Serwist: strategi cache sama (PRD 10.7)
+  dan tidak bergantung pada integrasi Serwist dengan Turbopack (default Next 16). Juga menangani Web Push admin.
+- **Job latar memakai `setInterval`** (`apps/api/src/jobs/scheduler.ts`) menggantikan node-cron: kedaluwarsa QRIS
+  tiap menit, hapus bukti bayar > 90 hari tiap 6 jam. Kedaluwarsa juga dicek saat pesanan dibaca.
+- **Ikon PWA** dibuat oleh `pnpm --filter @wtr/web icons` (skrip Node tanpa dependency). Ikon admin berlatar gelap
+  agar mudah dibedakan dari ikon pembeli di HP pemilik.
+- **`admin_users.token_version`** ditambahkan agar ganti password otomatis mengeluarkan sesi lama;
+  **`order_items.sort_order`** menjaga urutan item sesuai keranjang.
+- **`expectedTotal`** dikirim saat checkout: bila harga berubah, server menolak dengan `PRICE_CHANGED` dan keranjang
+  diperbarui, sehingga pembeli tidak pernah membayar total yang berbeda dari yang dilihat.
 
-## Rencana kerja
+## Status
 
-- [x] Hari 1 — monorepo, skema Prisma + seed, token desain Tailwind, kerangka API & web
-- [ ] Hari 1 — buat project Supabase, migrasi, deploy kerangka ke Vercel & Railway dengan domain
-- [ ] Hari 2 — API store/home/menu, Splash, Home, All Menu, Detail Menu, keranjang Zustand
-- [ ] Hari 3 — Keranjang & Checkout, POST /orders, Turnstile, rate limit, Status Pesanan, alur cash
-- [ ] Hari 4 — QRIS & upload bukti, cron kedaluwarsa, Struk PNG, Riwayat
-- [ ] Hari 5 — Admin: login, daftar & detail pesanan, konfirmasi/tolak/maju status, SSE, bunyi
-- [ ] Hari 6 — Admin menu & pengaturan, Web Push, manifest & service worker
-- [ ] Hari 7 — Splash final, uji end-to-end Android & iPhone, rilis
+- [x] Fondasi: monorepo, skema Prisma + seed, token desain, kerangka API & web
+- [x] API publik & admin lengkap (menu, keranjang, pesanan, QRIS, cek pesanan, auth, SSE, push, laporan, pengaturan)
+- [x] Halaman pembeli lengkap (Splash, Home, Menu, Detail, Checkout, Status, QRIS, Struk, Riwayat, Cek Pesanan, Offline)
+- [x] Dashboard admin lengkap (Pesanan, Detail, Menu + form opsi, Laporan, Pengaturan, onboarding, bunyi, push)
+- [x] PWA: dua manifest, service worker, ikon
+- [ ] `pnpm install`, typecheck, build, dan uji di browser (menunggu `cmd.exe` diperbaiki di laptop ini)
+- [ ] Buat project Supabase, migrasi + seed, deploy ke Vercel & Railway dengan domain
+- [ ] Ganti data dummy dengan menu, harga, foto, QRIS, dan nomor WA asli
+- [ ] Uji end-to-end di HP Android & iPhone (dine-in/delivery × cash/QRIS), rilis

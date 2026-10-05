@@ -4,7 +4,9 @@ import express from 'express';
 import helmet from 'helmet';
 import { env, isProduction } from './env';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
+import { adminRouter } from './routes/admin';
 import { healthRouter } from './routes/health';
+import { publicRouter } from './routes/public';
 
 export function createApp() {
   const app = express();
@@ -19,7 +21,8 @@ export function createApp() {
   app.use(cookieParser());
 
   app.use('/health', healthRouter);
-  // Router publik (/api) dan admin (/api/admin) ditambahkan mulai Hari 2.
+  app.use('/api/admin', adminRouter);
+  app.use('/api', publicRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

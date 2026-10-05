@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
+import multer from 'multer';
 import { ZodError } from 'zod';
 import { isProduction } from '../env';
 import { HttpError } from '../lib/http-error';
@@ -13,13 +14,23 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
-  if (err instanceof ZodError) {
+  // Dicek juga lewat nama untuk berjaga bila ada dua salinan zod di node_modules.
+  if (err instanceof ZodError || err?.name === 'ZodError') {
+    const issues = (err as ZodError).issues;
     res.status(400).json({
       error: {
         code: 'VALIDATION_ERROR',
-        message: 'Ada isian yang belum sesuai, cek lagi ya',
-        details: err.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message })),
+        message: issues[0]?.message ?? 'Ada isian yang belum sesuai, cek lagi ya',
+        details: issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message })),
       },
+    });
+    return;
+  }
+
+  if (err instanceof multer.MulterError) {
+    const tooLarge = err.code === 'LIMIT_FILE_SIZE';
+    res.status(tooLarge ? 413 : 400).json({
+      error: { code: err.code, message: tooLarge ? 'Ukuran foto maksimal 5 MB' : 'Upload foto tidak valid' },
     });
     return;
   }

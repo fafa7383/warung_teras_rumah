@@ -1,81 +1,127 @@
 @import 'tailwindcss';
 
 /*
- * Design token Warung Teras Rumah (PRD Bagian 3). Light mode saja.
- *
- * Nama token PRD → utilitas Tailwind:
- *   primary-50/100/600/700, accent-400, peach-200 → bg-primary-600, text-primary-700, …
- *   bg → cream (bg-cream)          surface → surface (bg-surface)    border → line (border-line)
- *   text-primary → ink (text-ink)  text-secondary → ink-muted         text-disabled → ink-disabled
- *   success/warning/info/danger (+ -100 untuk latar badge)
+ * Design system Warung Teras Rumah — gaya iOS (Apple Human Interface Guidelines), light mode saja.
+ * Merah warung (#E14B4B) tetap dipakai sebagai warna aksen (tint), sisanya mengikuti
+ * warna sistem iOS: latar grouped #F2F2F7, sel putih, garis hairline, warna status sistem.
  */
 @theme {
-  --color-primary-50: #fff3f1;
-  --color-primary-100: #fde7e4;
-  --color-primary-600: #e14b4b;
-  --color-primary-700: #c23838;
-  --color-accent-400: #f6b94a;
-  --color-peach-200: #ffd9c4;
+  /* Aksen brand. tint sedikit lebih gelap dari merah logo agar teks putih lolos kontras AA (4.6:1). */
+  --color-brand: #e14b4b;
+  --color-tint: #d63c3c;
+  --color-tint-pressed: #b8302f;
+  --color-tint-soft: #fdeceb;
 
-  --color-cream: #fff9f4;
+  /* Latar (systemGroupedBackground & sel) */
+  --color-canvas: #f2f2f7;
   --color-surface: #ffffff;
-  --color-line: #f1e3da;
 
-  --color-ink: #2e2320;
-  --color-ink-muted: #7a6862;
-  --color-ink-disabled: #b9aaa4;
+  /* Label: teks utama, sekunder (tetap lolos kontras AA), tersier (placeholder/nonaktif) */
+  --color-label: #1d1d1f;
+  --color-label-2: #6e6e73;
+  --color-label-3: #aeaeb2;
 
-  --color-success: #2f9e6b;
-  --color-success-100: #e3f5ec;
-  --color-warning: #e8962e;
-  --color-warning-100: #fdf1df;
-  --color-info: #3e7fd6;
-  --color-info-100: #e5effb;
-  --color-danger: #b3261e;
-  --color-danger-100: #fbe4e2;
+  /* Garis & isian */
+  --color-separator: rgb(60 60 67 / 0.18);
+  --color-fill: rgb(118 118 128 / 0.12);
+  --color-fill-2: rgb(120 120 128 / 0.2);
 
-  /* Skala tipografi (PRD 3.2). Pakai bersama font-display untuk judul. */
-  --text-display: 28px;
-  --text-display--line-height: 34px;
-  --text-display--font-weight: 600;
-  --text-h1: 22px;
-  --text-h1--line-height: 28px;
-  --text-h1--font-weight: 600;
-  --text-h2: 18px;
-  --text-h2--line-height: 24px;
-  --text-h2--font-weight: 600;
-  --text-body-lg: 16px;
-  --text-body-lg--line-height: 24px;
-  --text-body-lg--font-weight: 600;
-  --text-body: 14px;
-  --text-body--line-height: 20px;
+  /* Warna sistem iOS; varian -text untuk teks di atas latar terang (kontras AA) */
+  --color-green: #34c759;
+  --color-green-text: #248a3d;
+  --color-green-soft: #e8f7ec;
+  --color-orange: #ff9500;
+  --color-orange-text: #b25000;
+  --color-orange-soft: #fff3e0;
+  --color-blue: #007aff;
+  --color-blue-text: #0062cc;
+  --color-blue-soft: #e6f0ff;
+  --color-red: #ff3b30;
+  --color-red-text: #d70015;
+  --color-red-soft: #ffeceb;
+  --color-yellow: #ffcc00;
+  --color-yellow-text: #8a5a00;
+  --color-yellow-soft: #fff7d6;
+  --color-indigo: #5856d6;
+  --color-indigo-text: #3634a3;
+  --color-indigo-soft: #eeeefc;
+  --color-gray: #8e8e93;
+
+  /* Skala tipografi iOS (Dynamic Type ukuran Large) */
+  --text-large-title: 34px;
+  --text-large-title--line-height: 41px;
+  --text-large-title--letter-spacing: -0.02em;
+  --text-title-1: 28px;
+  --text-title-1--line-height: 34px;
+  --text-title-1--letter-spacing: -0.02em;
+  --text-title-2: 22px;
+  --text-title-2--line-height: 28px;
+  --text-title-2--letter-spacing: -0.015em;
+  --text-title-3: 20px;
+  --text-title-3--line-height: 25px;
+  --text-title-3--letter-spacing: -0.01em;
+  --text-headline: 17px;
+  --text-headline--line-height: 22px;
+  --text-headline--font-weight: 600;
+  --text-body: 17px;
+  --text-body--line-height: 22px;
+  --text-callout: 16px;
+  --text-callout--line-height: 21px;
+  --text-subhead: 15px;
+  --text-subhead--line-height: 20px;
+  --text-footnote: 13px;
+  --text-footnote--line-height: 18px;
   --text-caption: 12px;
   --text-caption--line-height: 16px;
-  --text-caption--font-weight: 600;
-  --text-price: 16px;
-  --text-price--line-height: 20px;
-  --text-price--font-weight: 800;
 
-  /* Radius (PRD 3.3): input & tombol, kartu, bottom sheet. Chip & badge memakai rounded-full. */
-  --radius-control: 14px;
-  --radius-card: 18px;
-  --radius-sheet: 24px;
+  /* Sudut membulat */
+  --radius-control: 12px;
+  --radius-tile: 14px;
+  --radius-section: 16px;
+  --radius-card: 20px;
+  --radius-sheet: 28px;
 
-  /* Bayangan bernuansa merah hangat, bukan abu-abu. */
-  --shadow-card: 0 4px 16px rgba(194, 56, 56, 0.08);
-  --shadow-nav: 0 -4px 20px rgba(46, 35, 32, 0.06);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 6px 20px rgb(0 0 0 / 0.06);
+  --shadow-float: 0 10px 30px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.06);
 
-  /* Gerak (PRD 3.5): durasi pakai duration-150 / duration-250 / duration-350. */
+  /* Kurva gerak: iOS (sheet), standar, dan splash (PRD 5.3) */
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-splash: cubic-bezier(0.65, 0, 0.35, 1);
 
-  /* Ukuran tata letak: h-header, h-nav, h-cta, max-w-content. */
-  --spacing-header: 56px;
-  --spacing-nav: 64px;
-  --spacing-cta: 52px;
+  --spacing-bar: 52px;
+  --spacing-cta: 50px;
   --container-content: 1200px;
 
   --animate-shimmer: shimmer 1.4s linear infinite;
+  --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
+  --animate-steam: steam 1.6s ease-in-out infinite;
+  --animate-bounce-once: bounce-once 450ms var(--ease-standard);
+
+  @keyframes steam {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.45;
+    }
+    50% {
+      transform: translateY(-5px);
+      opacity: 0.95;
+    }
+  }
+
+  @keyframes bounce-once {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    35% {
+      transform: scale(1.25) translateY(-3px);
+    }
+    70% {
+      transform: scale(0.95);
+    }
+  }
 
   @keyframes shimmer {
     from {
@@ -85,26 +131,42 @@
       background-position: -200% 0;
     }
   }
+
+  @keyframes pulse-dot {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.4;
+      transform: scale(0.8);
+    }
+  }
 }
 
-/* Font dari next/font (layout.tsx) dengan fallback PRD 3.2. */
+/* SF Pro di perangkat Apple; Inter sebagai pengganti terdekat di Android/Windows. */
 @theme inline {
-  --font-display: var(--font-fredoka), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-sans: var(--font-nunito), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', var(--font-inter), 'Segoe UI', Roboto, system-ui,
+    sans-serif;
+  --font-rounded:
+    ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, var(--font-inter), system-ui, sans-serif;
 }
 
 @layer base {
   html {
     color-scheme: light;
     -webkit-text-size-adjust: 100%;
+    background-color: var(--color-canvas);
   }
 
   body {
-    @apply bg-cream font-sans text-body text-ink antialiased;
+    @apply bg-canvas font-sans text-body text-label antialiased;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Input minimal 16px agar iOS tidak auto-zoom (PRD 3.2). */
+  /* Input minimal 16px agar iOS tidak auto-zoom. */
   input,
   select,
   textarea {
@@ -112,29 +174,130 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-primary-600);
+    outline: 3px solid rgb(225 75 75 / 0.45);
     outline-offset: 2px;
   }
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: default;
   }
 }
 
-/* Skeleton krem dengan shimmer (PRD 3.6). */
+/* Material kaca (bar & tab bar mengambang). */
+@utility glass {
+  background-color: rgb(255 255 255 / 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+@utility glass-strong {
+  background-color: rgb(255 255 255 / 0.82);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+  box-shadow:
+    0 10px 30px rgb(0 0 0 / 0.1),
+    0 0 0 0.5px rgb(0 0 0 / 0.06),
+    inset 0 1px 0 rgb(255 255 255 / 0.7);
+}
+
+@utility hairline-b {
+  box-shadow: inset 0 -0.5px 0 var(--color-separator);
+}
+
+@utility hairline-t {
+  box-shadow: inset 0 0.5px 0 var(--color-separator);
+}
+
+/* Garis pemisah hairline antar baris list, menjorok 16 px dari kiri seperti iOS. */
+@utility list-separators {
+  & > * + * {
+    position: relative;
+  }
+
+  & > * + *::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 16px;
+    height: 1px;
+    background: var(--color-separator);
+    transform: scaleY(0.5);
+    transform-origin: top;
+    pointer-events: none;
+  }
+}
+
+/* Umpan balik sentuh khas iOS: sedikit meredup saat ditekan. */
+@utility tap {
+  transition:
+    opacity 150ms var(--ease-standard),
+    transform 150ms var(--ease-standard),
+    background-color 150ms var(--ease-standard);
+
+  &:active:not(:disabled) {
+    opacity: 0.6;
+  }
+}
+
+/* Sorotan abu-abu saat baris list ditekan. */
+@utility tap-row {
+  transition: background-color 120ms var(--ease-standard);
+
+  &:active:not(:disabled) {
+    background-color: rgb(0 0 0 / 0.06);
+  }
+}
+
+@utility tap-scale {
+  transition: transform 150ms var(--ease-standard);
+
+  &:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 @utility skeleton {
-  background-image: linear-gradient(
-    90deg,
-    var(--color-line) 0%,
-    var(--color-primary-50) 50%,
-    var(--color-line) 100%
-  );
+  background-image: linear-gradient(90deg, #ececf0 0%, #f6f6f8 50%, #ececf0 100%);
   background-size: 200% 100%;
   animation: var(--animate-shimmer);
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
+}
+
+/* Splash (PRD 5): disembunyikan sebelum paint bila sudah tampil di sesi ini (lihat layout.tsx). */
+html[data-splash='done'] .splash-screen {
+  display: none;
+}
+
+html[data-splash='running'] .shop-content {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+/* Home masuk dari bawah 12 px bersamaan dengan splash memudar. */
+html[data-splash='leaving'] .shop-content {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 300ms var(--ease-standard),
+    transform 300ms var(--ease-standard);
 }

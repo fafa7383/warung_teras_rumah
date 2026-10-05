@@ -1,49 +1,38 @@
-interface LogoMarkProps {
-  size?: number;
-  className?: string;
-}
+import { cn } from '@/lib/cn';
 
-/** Ikon mangkok + atap rumah kecil (logo dummy, PRD 3.4). */
-export function LogoMark({ size = 32, className }: LogoMarkProps) {
+/** Ikon aplikasi: mangkok + atap rumah putih di kotak merah membulat (gaya ikon iOS). */
+export function LogoMark({ size = 32, className }: { size?: number; className?: string }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 48 48"
-      fill="none"
-      aria-hidden="true"
-      className={className}
-    >
+    <svg viewBox="0 0 64 64" width={size} height={size} className={className} aria-hidden="true">
+      <rect width="64" height="64" rx="14.5" fill="#E14B4B" />
       <path
-        d="M11 19 24 8.5 37 19"
-        stroke="var(--color-primary-600)"
-        strokeWidth="3.5"
+        d="M19 27 32 16.5 45 27"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="4"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M6 24h36a18 18 0 0 1-36 0Z" fill="var(--color-primary-600)" />
+      <path d="M13 32h38a19 19 0 0 1-38 0Z" fill="#fff" />
       <path
-        d="M10 28h28"
-        stroke="var(--color-surface)"
+        d="M18 36.5h28"
+        stroke="#E14B4B"
         strokeWidth="2"
+        strokeDasharray="3 3.5"
         strokeLinecap="round"
-        strokeDasharray="3 3"
+        opacity="0.55"
       />
-      <rect x="17" y="40" width="14" height="4" rx="2" fill="var(--color-primary-700)" />
     </svg>
   );
 }
 
-interface LogoProps {
-  size?: number;
-  className?: string;
-}
-
-export function Logo({ size = 32, className }: LogoProps) {
+export function Logo({ size = 32, className, compact }: { size?: number; className?: string; compact?: boolean }) {
   return (
-    <span className={`inline-flex items-center gap-2 ${className ?? ''}`}>
+    <span className={cn('inline-flex items-center gap-2', className)}>
       <LogoMark size={size} />
-      <span className="font-display text-h2 text-primary-600">Warung Teras Rumah</span>
+      <span className={cn('font-rounded font-semibold tracking-tight text-label', compact ? 'text-headline' : 'text-title-3')}>
+        Warung Teras Rumah
+      </span>
     </span>
   );
 }

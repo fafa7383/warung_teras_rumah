@@ -45,12 +45,20 @@ export const CUSTOMER_CANCELLABLE_STATUSES: readonly OrderStatus[] = [
   'AWAITING_CONFIRMATION',
 ];
 
-export const ADMIN_ORDER_TABS = {
+export const ADMIN_ORDER_TAB_KEYS = ['NEEDS_ACTION', 'ONGOING', 'DONE'] as const;
+export type AdminOrderTab = (typeof ADMIN_ORDER_TAB_KEYS)[number];
+
+export const ADMIN_ORDER_TABS: Record<AdminOrderTab, readonly OrderStatus[]> = {
   NEEDS_ACTION: ['AWAITING_CONFIRMATION'],
   ONGOING: ['AWAITING_PAYMENT', 'PROCESSING', 'DELIVERING'],
   DONE: ['COMPLETED', 'CONFIRMED', 'REJECTED', 'EXPIRED', 'CANCELLED'],
-} as const satisfies Record<string, readonly OrderStatus[]>;
-export type AdminOrderTab = keyof typeof ADMIN_ORDER_TABS;
+};
+
+export const ADMIN_ORDER_TAB_LABELS: Record<AdminOrderTab, string> = {
+  NEEDS_ACTION: 'Perlu Tindakan',
+  ONGOING: 'Berjalan',
+  DONE: 'Selesai',
+};
 
 interface Transition {
   from: OrderStatus;

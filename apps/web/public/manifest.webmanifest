@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "Warung Teras Rumah",
+  "short_name": "Teras Rumah",
+  "description": "Pesan bakso, mie ayam, seblak, jajanan, dan minuman. Makan di tempat atau diantar, gratis ongkir.",
+  "lang": "id",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F2F7",
+  "theme_color": "#E14B4B",
+  "categories": ["food", "shopping"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

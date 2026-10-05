@@ -31,15 +31,18 @@ export interface PricingMenuItem {
   optionGroups: PricingOptionGroup[];
 }
 
-/** Disimpan sebagai JSON di order_items.options_snapshot. */
-export interface OptionSnapshot {
+/**
+ * Disimpan sebagai JSON di order_items.options_snapshot.
+ * Sengaja memakai `type` (bukan interface) agar bisa langsung ditulis ke kolom JSON Prisma.
+ */
+export type OptionSnapshot = {
   groupId: string;
   groupName: string;
   groupType: OptionGroupType;
   optionId: string;
   optionName: string;
   priceDelta: number;
-}
+};
 
 export type SelectionIssue =
   | { code: 'MENU_UNAVAILABLE' }
