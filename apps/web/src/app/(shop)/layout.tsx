@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { FlyToCartLayer } from '@/components/motion/fly-to-cart';
 import { CartPanel } from '@/components/shop/cart-panel';
 import { CartMiniBar, TabBar, TopNav } from '@/components/shop/navigation';
 import { Splash } from '@/components/splash';
@@ -22,6 +23,7 @@ export default function ShopLayout({ children, modal }: { children: ReactNode; m
       <TabBar />
       <Toaster className="bottom-[calc(max(12px,env(safe-area-inset-bottom))+148px)] lg:bottom-24" />
       {modal}
+      <FlyToCartLayer />
     </>
   );
 }

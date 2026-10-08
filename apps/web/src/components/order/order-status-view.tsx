@@ -9,13 +9,16 @@ import {
   formatDateTimeWIB,
   formatPhoneDisplay,
   isFinalStatus,
+  type OrderStatus,
   type PublicOrderDto,
 } from '@wtr/shared';
 import { useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { BowlArt } from '@/components/brand/food-art';
+import { ConfettiBurst } from '@/components/motion/celebration';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { EmptyState, Skeleton } from '@/components/ui/empty-state';
@@ -27,6 +30,7 @@ import { ApiError, apiFetch } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { copyText, vibrate } from '@/lib/device';
 import { useHistoryStore } from '@/lib/local-stores';
+import { riseOrder, spring } from '@/lib/motion';
 import { reorderItems } from '@/lib/orders-client';
 import { queryKeys, useOrderQuery } from '@/lib/queries';
 import { toast } from '@/lib/toast-store';
@@ -46,21 +50,56 @@ function OrderTopBar({ title }: { title: string }) {
   );
 }
 
-function StatusHero({ order }: { order: PublicOrderDto }) {
+const CELEBRATE_STATUSES: readonly OrderStatus[] = ['CONFIRMED', 'PROCESSING', 'COMPLETED'];
+
+function StatusHero({ order, celebrate }: { order: PublicOrderDto; celebrate: boolean }) {
   const { icon: Icon, accent } = STATUS_STYLES[order.status];
   const copy = statusCopy(order);
   const active = !isFinalStatus(order.status);
   return (
-    <section className="flex flex-col items-center rounded-card bg-surface px-5 py-7 text-center shadow-card" aria-live="polite">
+    <section
+      className="animate-rise flex flex-col items-center rounded-card bg-surface px-5 py-7 text-center shadow-card"
+      style={riseOrder(1)}
+      aria-live="polite"
+    >
       <span className="relative flex size-20 items-center justify-center">
-        {active && <span className={cn('absolute inset-0 animate-ping rounded-full opacity-20 [animation-duration:2s]', accent)} />}
-        <span className={cn('relative flex size-20 items-center justify-center rounded-full text-white', accent)}>
-          <Icon size={38} strokeWidth={2} aria-hidden="true" />
-        </span>
+        {/* Gelombang lembut selama pesanan masih berjalan. */}
+        {active && (
+          <motion.span
+            key={`wave-${order.status}`}
+            className={cn('absolute inset-0 rounded-full', accent)}
+            animate={{ scale: [1, 1.7], opacity: [0.3, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+          />
+        )}
+        {celebrate && <ConfettiBurst key={`confetti-${order.status}`} count={32} />}
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={order.status}
+            className={cn('relative flex size-20 items-center justify-center rounded-full text-white', accent)}
+            initial={{ scale: 0.3, rotate: -120, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            exit={{ scale: 0.3, rotate: 120, opacity: 0 }}
+            transition={spring.bouncy}
+          >
+            <Icon size={38} strokeWidth={2} aria-hidden="true" />
+          </motion.span>
+        </AnimatePresence>
       </span>
-      <StatusBadge status={order.status} className="mt-4" />
-      <h2 className="mt-3 text-title-2 font-bold">{copy.title}</h2>
-      <p className="mt-1 max-w-sm text-subhead text-label-2">{copy.message}</p>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={order.status}
+          className="flex flex-col items-center"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={spring.gentle}
+        >
+          <StatusBadge status={order.status} className="mt-4" />
+          <h2 className="mt-3 text-title-2 font-bold">{copy.title}</h2>
+          <p className="mt-1 max-w-sm text-subhead text-label-2">{copy.message}</p>
+        </motion.div>
+      </AnimatePresence>
       {order.status === 'REJECTED' && order.store.whatsapp && (
         <ButtonLink
           href={buildWhatsAppUrl(order.store.whatsapp, `Halo, saya mau tanya tentang pesanan ${order.code}.`)}
@@ -87,13 +126,15 @@ export function OrderStatusView({ token }: { token: string }) {
   const [cancelling, setCancelling] = useState(false);
   const [reordering, setReordering] = useState(false);
   const lastStatus = useRef<string | null>(null);
+  const [celebrate, setCelebrate] = useState(false);
 
-  // Toast + getar singkat saat status berubah (PRD 6.5).
+  // Toast + getar singkat saat status berubah (PRD 6.5); confetti saat dikonfirmasi/selesai.
   useEffect(() => {
     if (!order) return;
     if (lastStatus.current && lastStatus.current !== order.status) {
       toast.info('Status pesananmu berubah');
       vibrate([30, 60, 30]);
+      setCelebrate(CELEBRATE_STATUSES.includes(order.status));
     }
     lastStatus.current = order.status;
   }, [order]);
@@ -188,7 +229,7 @@ export function OrderStatusView({ token }: { token: string }) {
     <>
       <OrderTopBar title={`Pesanan ${order.code}`} />
       <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+32px)]">
-        <header className="flex flex-col gap-2 px-1">
+        <header className="animate-rise flex flex-col gap-2 px-1" style={riseOrder(0)}>
           <div className="flex items-center gap-2">
             <h1 className="font-rounded text-title-1 font-bold">{order.code}</h1>
             <button
@@ -212,11 +253,11 @@ export function OrderStatusView({ token }: { token: string }) {
           </div>
         </header>
 
-        <StatusHero order={order} />
+        <StatusHero order={order} celebrate={celebrate} />
 
         {order.status === 'AWAITING_PAYMENT' && order.paymentMethod === 'QRIS' && <QrisPayment order={order} />}
 
-        <ListSection header="Progres">
+        <ListSection header="Progres" className="animate-rise" style={riseOrder(2)}>
           <div className="px-4 py-4">
             <StatusTimeline
               status={order.status}
@@ -227,7 +268,7 @@ export function OrderStatusView({ token }: { token: string }) {
           </div>
         </ListSection>
 
-        <ListSection header="Pemesan">
+        <ListSection header="Pemesan" className="animate-rise" style={riseOrder(3)}>
           <ListRow title="Nama" value={order.customerName} />
           <ListRow title="WhatsApp" value={formatPhoneDisplay(order.customerPhone)} />
           {order.orderType === 'DELIVERY' && (
@@ -235,13 +276,13 @@ export function OrderStatusView({ token }: { token: string }) {
           )}
         </ListSection>
 
-        <ListSection header="Detail Pesanan">
+        <ListSection header="Detail Pesanan" className="animate-rise" style={riseOrder(4)}>
           <OrderItemsList items={order.items} />
           <TotalsRows subtotal={order.subtotal} deliveryFee={order.deliveryFee} total={order.total} />
           <ListRow title="Pembayaran" value={PAYMENT_METHOD_LABELS[order.paymentMethod]} />
         </ListSection>
 
-        <div className="flex flex-col gap-3">
+        <div className="animate-rise flex flex-col gap-3" style={riseOrder(5)}>
           {order.store.whatsapp && !final && (
             <ButtonLink
               href={buildWhatsAppUrl(order.store.whatsapp, whatsappText)}

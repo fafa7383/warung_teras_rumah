@@ -88,7 +88,8 @@ publicRouter.post(
   upload.single('file'),
   async (req, res) => {
     if (!req.file) throw new HttpError(400, 'FILE_REQUIRED', 'Pilih foto bukti bayar dulu ya');
-    const order = await uploadPaymentProof(req.params.token, req.file.buffer);
+    // Dengan beberapa middleware, tipe params Express melebar; nilainya tetap string dari path.
+    const order = await uploadPaymentProof(String(req.params.token), req.file.buffer);
     res.set(noStore).json(toPublicOrderDto(order, await getStoreSnapshot()));
   },
 );

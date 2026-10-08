@@ -1,8 +1,10 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MotionConfig } from 'motion/react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { ApiError } from '@/lib/api-client';
+import { spring } from '@/lib/motion';
 import { NavigationTracker } from '@/lib/nav-history';
 
 function createQueryClient() {
@@ -30,9 +32,12 @@ export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(createQueryClient);
   return (
     <QueryClientProvider client={queryClient}>
-      <NavigationTracker />
-      <ServiceWorkerRegistrar />
-      {children}
+      {/* reducedMotion="user": gerak transform otomatis dimatikan bila HP meminta "kurangi gerakan". */}
+      <MotionConfig reducedMotion="user" transition={spring.smooth}>
+        <NavigationTracker />
+        <ServiceWorkerRegistrar />
+        {children}
+      </MotionConfig>
     </QueryClientProvider>
   );
 }

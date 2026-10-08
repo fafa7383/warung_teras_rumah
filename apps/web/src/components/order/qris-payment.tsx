@@ -3,6 +3,7 @@
 import {
   MAX_UPLOAD_BYTES,
   PAYMENT_PROOF_GRACE_MS,
+  QRIS_PAYMENT_WINDOW_MS,
   buildWhatsAppUrl,
   formatRupiah,
   type PublicOrderDto,
@@ -17,6 +18,7 @@ import { ApiError, apiFetch } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { compressImage, copyText, downloadDataUrl, vibrate } from '@/lib/device';
 import { useNow } from '@/lib/hooks';
+import { spring } from '@/lib/motion';
 import { queryKeys } from '@/lib/queries';
 import { toast } from '@/lib/toast-store';
 
@@ -25,6 +27,32 @@ function formatCountdown(ms: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+/** Cincin hitung mundur: berkurang mulus tiap detik, merah saat < 2 menit. */
+function CountdownRing({ progress, urgent }: { progress: number; urgent: boolean }) {
+  const radius = 26;
+  const circumference = 2 * Math.PI * radius;
+  return (
+    <svg viewBox="0 0 64 64" className="size-16 shrink-0 -rotate-90" aria-hidden="true">
+      <circle cx="32" cy="32" r={radius} fill="none" stroke="rgb(0 0 0 / 0.08)" strokeWidth="6" />
+      <motion.circle
+        cx="32"
+        cy="32"
+        r={radius}
+        fill="none"
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        initial={false}
+        animate={{
+          strokeDashoffset: circumference * (1 - Math.min(1, progress)),
+          stroke: urgent ? '#FF3B30' : '#FF9500',
+        }}
+        transition={{ strokeDashoffset: { duration: 1, ease: 'linear' }, stroke: { duration: 0.4 } }}
+      />
+    </svg>
+  );
 }
 
 /** Simpan QRIS sebagai PNG agar bisa dipindai dari galeri di aplikasi e-wallet/m-banking. */
@@ -151,18 +179,27 @@ export function QrisPayment({ order }: { order: PublicOrderDto }) {
 
   return (
     <section aria-label="Pembayaran QRIS" className="overflow-hidden rounded-card bg-surface shadow-card">
-      <div className={cn('flex flex-col items-center gap-1 px-5 pt-5 pb-4', urgent ? 'bg-red-soft' : 'bg-orange-soft')}>
-        <span className={cn('flex items-center gap-1.5 text-footnote font-semibold', urgent ? 'text-red-text' : 'text-orange-text')}>
-          <Timer size={16} aria-hidden="true" /> Sisa waktu bayar
-        </span>
-        <span
-          className={cn('font-rounded text-large-title font-bold tabular-nums', urgent ? 'text-red-text' : 'text-orange-text')}
-          role="timer"
-          aria-live="off"
-        >
-          {formatCountdown(remaining)}
-        </span>
-      </div>
+      <motion.div
+        className="flex items-center gap-4 px-5 py-4"
+        animate={{ backgroundColor: urgent ? '#FFECEB' : '#FFF3E0' }}
+        transition={{ duration: 0.6 }}
+      >
+        <CountdownRing progress={Math.max(0, remaining) / QRIS_PAYMENT_WINDOW_MS} urgent={urgent} />
+        <div className="flex flex-col">
+          <span className={cn('flex items-center gap-1.5 text-footnote font-semibold', urgent ? 'text-red-text' : 'text-orange-text')}>
+            <Timer size={16} aria-hidden="true" /> Sisa waktu bayar
+          </span>
+          <motion.span
+            className={cn('font-rounded text-large-title font-bold tabular-nums', urgent ? 'text-red-text' : 'text-orange-text')}
+            role="timer"
+            aria-live="off"
+            animate={urgent ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+            transition={urgent ? { duration: 1, repeat: Infinity } : { duration: 0.2 }}
+          >
+            {formatCountdown(remaining)}
+          </motion.span>
+        </div>
+      </motion.div>
 
       <div className="flex flex-col items-center gap-1 px-5 pt-5">
         <span className="text-footnote text-label-2">Total yang harus dibayar</span>
@@ -249,28 +286,54 @@ export function QrisPayment({ order }: { order: PublicOrderDto }) {
             event.target.value = '';
           }}
         />
-        {preview ? (
-          <div className="flex items-center gap-3 rounded-section bg-canvas p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="Pratinjau bukti bayar" className="size-20 rounded-control object-cover" />
-            <div className="min-w-0 flex-1">
-              <p className="text-subhead font-semibold">Bukti bayar siap dikirim</p>
-              <button type="button" onClick={() => inputRef.current?.click()} className="tap text-subhead text-tint">
-                Ganti foto
-              </button>
-            </div>
-          </div>
-        ) : (
-          <label
-            htmlFor="bukti-bayar"
-            className="tap flex cursor-pointer flex-col items-center gap-2 rounded-section border-2 border-dashed border-label-3 px-4 py-6 text-center"
-          >
-            <ImagePlus size={28} className="text-tint" aria-hidden="true" />
-            <span className="text-headline">Pilih foto bukti bayar</span>
-            <span className="text-footnote text-label-2">Kamera atau galeri · JPG, PNG, WEBP · maks. 5 MB</span>
-          </label>
-        )}
-        <Button fullWidth className="mt-4" disabled={!file} loading={uploading} onClick={upload}>
+        <AnimatePresence mode="wait" initial={false}>
+          {preview ? (
+            <motion.div
+              key={preview}
+              initial={{ opacity: 0, scale: 0.92, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={spring.smooth}
+              className="flex items-center gap-3 rounded-section bg-canvas p-3"
+            >
+              <motion.img
+                src={preview}
+                alt="Pratinjau bukti bayar"
+                className="size-20 rounded-control object-cover"
+                initial={{ rotate: -6, scale: 0.8 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={spring.bouncy}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-subhead font-semibold">Bukti bayar siap dikirim</p>
+                <button type="button" onClick={() => inputRef.current?.click()} className="tap text-subhead text-tint">
+                  Ganti foto
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.label
+              key="picker"
+              htmlFor="bukti-bayar"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              whileTap={{ scale: 0.97 }}
+              className="flex cursor-pointer flex-col items-center gap-2 rounded-section border-2 border-dashed border-label-3 px-4 py-6 text-center transition-colors hover:border-tint"
+            >
+              <motion.span
+                animate={{ y: [0, -4, 0] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                className="inline-flex"
+              >
+                <ImagePlus size={28} className="text-tint" aria-hidden="true" />
+              </motion.span>
+              <span className="text-headline">Pilih foto bukti bayar</span>
+              <span className="text-footnote text-label-2">Kamera atau galeri · JPG, PNG, WEBP · maks. 5 MB</span>
+            </motion.label>
+          )}
+        </AnimatePresence>
+        <Button fullWidth className={cn('mt-4', file && !uploading && 'shine')} disabled={!file} loading={uploading} onClick={upload}>
           Kirim Bukti Pembayaran
         </Button>
       </div>

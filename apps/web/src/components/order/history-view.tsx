@@ -11,12 +11,17 @@ import { PageHeader } from '@/components/ui/page-header';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useHydrated } from '@/lib/hooks';
 import { useHistoryStore, type HistoryEntry } from '@/lib/local-stores';
+import { riseOrder } from '@/lib/motion';
 import { useOrderHistoryQuery } from '@/lib/queries';
 
-function HistoryRow({ entry, summary }: { entry: HistoryEntry; summary?: OrderSummaryDto }) {
+function HistoryRow({ entry, summary, index }: { entry: HistoryEntry; summary?: OrderSummaryDto; index: number }) {
   const active = summary ? !isFinalStatus(summary.status) : false;
   return (
-    <Link href={`/pesanan/${entry.token}`} className="tap-row flex items-center gap-3 px-4 py-3">
+    <Link
+      href={`/pesanan/${entry.token}`}
+      className="animate-rise tap-row flex items-center gap-3 px-4 py-3"
+      style={riseOrder(Math.min(index, 10))}
+    >
       <span className="flex w-2.5 shrink-0 justify-center" aria-hidden="true">
         {active && <span className="size-2.5 animate-pulse-dot rounded-full bg-orange" />}
       </span>
@@ -79,8 +84,8 @@ export function HistoryView() {
           />
         ) : (
           <ListSection>
-            {sorted.map((entry) => (
-              <HistoryRow key={entry.token} entry={entry} summary={summaries.get(entry.token)} />
+            {sorted.map((entry, index) => (
+              <HistoryRow key={entry.token} entry={entry} summary={summaries.get(entry.token)} index={index} />
             ))}
           </ListSection>
         )}

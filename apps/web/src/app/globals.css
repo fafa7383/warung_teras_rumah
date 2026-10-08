@@ -97,6 +97,18 @@
   --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
   --animate-steam: steam 1.6s ease-in-out infinite;
   --animate-bounce-once: bounce-once 450ms var(--ease-standard);
+  --animate-float: float 3.2s ease-in-out infinite;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
 
   @keyframes steam {
     0%,
@@ -148,10 +160,11 @@
 /* SF Pro di perangkat Apple; Inter sebagai pengganti terdekat di Android/Windows. */
 @theme inline {
   --font-sans:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', var(--font-inter), 'Segoe UI', Roboto, system-ui,
-    sans-serif;
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', var(--font-inter), 'Segoe UI', Roboto,
+    system-ui, sans-serif;
   --font-rounded:
-    ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, var(--font-inter), system-ui, sans-serif;
+    ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, var(--font-inter), system-ui,
+    sans-serif;
 }
 
 @layer base {
@@ -300,4 +313,311 @@ html[data-splash='leaving'] .shop-content {
   transition:
     opacity 300ms var(--ease-standard),
     transform 300ms var(--ease-standard);
+}
+
+/* ------------------------------------------------------------------------------------------
+ * Gerak masuk (CSS): berjalan sejak HTML pertama tampil, sebelum JavaScript termuat,
+ * jadi konten tidak pernah "kosong" di HP lambat. Interaksi memakai Framer Motion.
+ * ---------------------------------------------------------------------------------------- */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shine {
+  from {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  to {
+    transform: translateX(220%) skewX(-20deg);
+  }
+}
+
+/* Muncul berurutan: atur urutan dengan style={{ '--i': n }} (jeda 55 ms per elemen). */
+@utility animate-rise {
+  animation: rise 620ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+
+/* Transisi halaman: hanya opacity agar elemen fixed (tombol bawah) tidak ikut bergeser. */
+@utility animate-page-in {
+  animation: page-in 320ms var(--ease-standard) both;
+}
+
+/* Muncul saat di-scroll ke layar, digerakkan langsung oleh posisi scroll (tanpa JavaScript). */
+@utility reveal {
+  @supports (animation-timeline: view()) {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 22%;
+  }
+}
+
+/* Kilau yang menyapu tombol saat siap ditekan. */
+@utility shine {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+    animation: shine 2.6s var(--ease-standard) infinite;
+    animation-delay: 0.6s;
+    pointer-events: none;
+  }
+}
+
+/* Selama splash, animasi masuk ditahan lalu diputar saat Home muncul. */
+html[data-splash='running'] .animate-rise {
+  animation-play-state: paused;
+}
+
+/* ------------------------------------------------------------------------------------------
+ * Header Home: suasana pagi/sore/malam (WIB). html[data-daypart] dipasang sebelum paint
+ * (layout.tsx) lalu diperbarui tiap 30 detik (home-hero.tsx); pergantiannya memudar pelan.
+ * ---------------------------------------------------------------------------------------- */
+
+.daypart-morning,
+.daypart-afternoon,
+.daypart-night,
+.daypart-day {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 1.2s var(--ease-standard),
+    visibility 0s linear 1.2s;
+}
+
+html[data-daypart='morning'] :is(.daypart-morning, .daypart-day),
+html[data-daypart='afternoon'] :is(.daypart-afternoon, .daypart-day),
+html[data-daypart='night'] .daypart-night,
+html:not([data-daypart]) :is(.daypart-morning, .daypart-day) {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 1.2s var(--ease-standard),
+    visibility 0s;
+}
+
+/* Teks per suasana ditumpuk; yang tersembunyi melayang agar tidak menambah tinggi baris. */
+.daypart-stack {
+  display: block;
+  position: relative;
+
+  & > * {
+    display: block;
+    position: absolute;
+    inset: 0 0 auto;
+  }
+}
+
+html[data-daypart='morning'] .daypart-stack > .daypart-morning,
+html[data-daypart='afternoon'] .daypart-stack > .daypart-afternoon,
+html[data-daypart='night'] .daypart-stack > .daypart-night,
+html:not([data-daypart]) .daypart-stack > .daypart-morning {
+  position: relative;
+}
+
+/* Cadangan bila WebGL tidak tersedia; juga tampil sesaat sebelum langit pertama tergambar. */
+.sky-fallback {
+  background: linear-gradient(180deg, #2468c8 0%, #5d9ee6 55%, #a6d0f2 100%);
+}
+
+html[data-daypart='afternoon'] .sky-fallback {
+  background: linear-gradient(180deg, #4f68ae 0%, #c98c86 60%, #ffb873 100%);
+}
+
+html[data-daypart='night'] .sky-fallback {
+  background: linear-gradient(180deg, #060a18 0%, #10173a 60%, #18213f 100%);
+}
+
+@utility text-shadow-sky {
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.2),
+    0 2px 18px rgb(0 0 0 / 0.25);
+}
+
+/* Lampu bohlam teras (malam): kabel bergoyang pelan, bohlam berpendar dan sedikit berkedip. */
+.hero-lamps {
+  transform-origin: 50% 0;
+  animation: lamp-sway 7s ease-in-out infinite alternate;
+}
+
+.hero-bulb {
+  position: absolute;
+  width: 9px;
+  height: 12px;
+  margin-left: -4.5px;
+  border-radius: 45% 45% 50% 50% / 35% 35% 65% 65%;
+  background: radial-gradient(circle at 50% 60%, #fffbe8 0%, #ffd77a 45%, #ffb347 100%);
+  box-shadow:
+    0 0 8px 2px rgb(255 205 120 / 0.85),
+    0 0 26px 8px rgb(255 170 80 / 0.4);
+  animation: bulb-flicker 4.8s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -0.53s);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    width: 5px;
+    height: 4px;
+    margin-left: -2.5px;
+    border-radius: 1px;
+    background: #2a2118;
+  }
+
+  /* Warung tutup: lampu padam. */
+  &.is-dim {
+    background: #6f6250;
+    box-shadow: none;
+    animation: none;
+  }
+}
+
+@keyframes lamp-sway {
+  from {
+    transform: rotate(-0.5deg);
+  }
+  to {
+    transform: rotate(0.5deg);
+  }
+}
+
+@keyframes bulb-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+  53% {
+    opacity: 0.9;
+  }
+}
+
+/* Kawanan burung kecil melintas (pagi & sore), lalu jeda sebelum lewat lagi. */
+.hero-bird {
+  position: absolute;
+  left: 0;
+  animation: bird-fly 24s linear infinite both;
+  animation-delay: calc(2s + var(--i, 0) * 0.45s);
+}
+
+.hero-bird-wings {
+  display: block;
+  transform-origin: 50% 60%;
+  animation: bird-flap 0.55s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -0.2s);
+}
+
+@keyframes bird-fly {
+  0% {
+    transform: translate(-40px, 0);
+  }
+  27% {
+    transform: translate(50vw, 8px);
+  }
+  55%,
+  100% {
+    transform: translate(calc(100vw + 40px), -14px);
+  }
+}
+
+@keyframes bird-flap {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(-0.35);
+  }
+}
+
+/* Bintang jatuh sesekali (malam). */
+.hero-shooting-star {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 110px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fff, rgb(255 255 255 / 0));
+  filter: drop-shadow(0 0 4px rgb(255 255 255 / 0.8));
+  transform-origin: 0 50%;
+  opacity: 0;
+  animation: shooting-star 11s ease-out infinite;
+  animation-delay: 2.5s;
+}
+
+@keyframes shooting-star {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(-25deg) scaleX(0.2);
+  }
+  1.5% {
+    opacity: 1;
+  }
+  7%,
+  100% {
+    opacity: 0;
+    transform: translate(-170px, 80px) rotate(-25deg) scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-page-in,
+  .reveal {
+    animation: none !important;
+  }
+
+  .shine::after {
+    display: none;
+  }
+
+  .hero-lamps,
+  .hero-bulb,
+  .hero-bird-wings {
+    animation: none;
+  }
+
+  .hero-bird,
+  .hero-shooting-star {
+    display: none;
+  }
 }

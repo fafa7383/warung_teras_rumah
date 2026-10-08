@@ -10,6 +10,7 @@ import {
   type PublicOrderDto,
 } from '@wtr/shared';
 import { toPng } from 'html-to-image';
+import { motion } from 'motion/react';
 import { useRef, useState } from 'react';
 import { LogoMark } from '@/components/brand/logo';
 import { Button, ButtonLink } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import { Download, Share } from '@/components/ui/icons';
 import { BackButton } from '@/components/ui/page-header';
 import { cn } from '@/lib/cn';
 import { copyText, downloadDataUrl } from '@/lib/device';
+import { spring } from '@/lib/motion';
 import { useOrderQuery } from '@/lib/queries';
 import { toast } from '@/lib/toast-store';
 import { RECEIPT_STATUSES, isPaid } from './status-copy';
@@ -40,7 +42,7 @@ function Dashed() {
   return <div className="my-3 border-t border-dashed border-label-3" aria-hidden="true" />;
 }
 
-function Receipt({ order }: { order: PublicOrderDto }) {
+function Receipt({ order, stampDelay = 0 }: { order: PublicOrderDto; stampDelay?: number }) {
   const paid = isPaid(order);
   return (
     <div className="relative">
@@ -101,14 +103,18 @@ function Receipt({ order }: { order: PublicOrderDto }) {
         </div>
 
         <div className="mt-5 flex justify-center">
-          <span
+          {/* Cap dihentakkan setelah struk selesai keluar. */}
+          <motion.span
+            initial={{ scale: 2.4, opacity: 0, rotate: -24 }}
+            animate={{ scale: 1, opacity: 1, rotate: -6 }}
+            transition={{ type: 'spring', stiffness: 520, damping: 18, delay: stampDelay }}
             className={cn(
-              '-rotate-6 rounded-[10px] border-[3px] px-4 py-1 font-sans text-title-3 font-black tracking-wider',
+              'rounded-[10px] border-[3px] px-4 py-1 font-sans text-title-3 font-black tracking-wider',
               paid ? 'border-green-text text-green-text' : 'border-orange-text text-orange-text',
             )}
           >
             {paid ? 'LUNAS' : 'BAYAR DI TEMPAT'}
-          </span>
+          </motion.span>
         </div>
         <p className="mt-5 text-center font-sans text-subhead">Terima kasih sudah jajan di Teras Rumah!</p>
       </div>
@@ -193,12 +199,29 @@ export function ReceiptView({ token }: { token: string }) {
     <>
       {header}
       <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 px-4 pt-6 pb-[calc(env(safe-area-inset-bottom)+32px)]">
-        <div ref={receiptRef} className="w-full max-w-[360px] bg-canvas p-2">
-          <div className="overflow-hidden rounded-t-[14px] drop-shadow-[0_8px_20px_rgb(0_0_0/0.08)]">
-            <Receipt order={order} />
+        <div className="relative w-full max-w-[376px]">
+          {/* "Mulut printer": struk keluar dari celah ini. */}
+          <div className="relative z-10 mx-auto h-3 w-full rounded-full bg-gradient-to-b from-[#3a3a3c] to-[#1d1d1f] shadow-[0_4px_10px_rgb(0_0_0/0.25)]" aria-hidden="true" />
+          <div className="-mt-1.5 overflow-hidden px-2">
+            <motion.div
+              initial={{ y: '-100%' }}
+              animate={{ y: '0%' }}
+              transition={{ duration: 1.3, ease: [0.45, 0, 0.2, 1] }}
+            >
+              <div ref={receiptRef} className="bg-canvas p-2">
+                <div className="overflow-hidden rounded-t-[4px] drop-shadow-[0_8px_20px_rgb(0_0_0/0.08)]">
+                  <Receipt order={order} stampDelay={1.25} />
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
-        <div className="flex w-full max-w-[360px] gap-3">
+        <motion.div
+          className="flex w-full max-w-[360px] gap-3"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...spring.gentle, delay: 1.5 }}
+        >
           <Button
             variant="filled"
             fullWidth
@@ -211,7 +234,7 @@ export function ReceiptView({ token }: { token: string }) {
           <Button variant="tinted" fullWidth onClick={share} icon={<Share size={20} aria-hidden="true" />}>
             Bagikan
           </Button>
-        </div>
+        </motion.div>
       </div>
     </>
   );

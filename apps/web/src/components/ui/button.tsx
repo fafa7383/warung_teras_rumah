@@ -1,6 +1,10 @@
+'use client';
+
+import { AnimatePresence, motion, type HTMLMotionProps } from 'motion/react';
 import Link from 'next/link';
-import type { ComponentProps, ReactNode } from 'react';
+import type { ComponentProps, ReactNode, Ref } from 'react';
 import { cn } from '@/lib/cn';
+import { spring } from '@/lib/motion';
 import { Spinner } from './spinner';
 
 export type ButtonVariant =
@@ -42,7 +46,7 @@ interface StyleProps {
 
 export function buttonClass({ variant = 'filled', size = 'lg', fullWidth, className }: StyleProps = {}) {
   return cn(
-    'tap relative inline-flex shrink-0 select-none items-center justify-center rounded-full whitespace-nowrap',
+    'tap-scale relative inline-flex shrink-0 select-none items-center justify-center rounded-full whitespace-nowrap transition-[background-color,color,opacity] duration-200',
     VARIANTS[variant],
     SIZES[size],
     fullWidth && 'w-full',
@@ -50,7 +54,8 @@ export function buttonClass({ variant = 'filled', size = 'lg', fullWidth, classN
   );
 }
 
-type ButtonProps = ComponentProps<'button'> & StyleProps & { loading?: boolean; icon?: ReactNode };
+type ButtonProps = Omit<HTMLMotionProps<'button'>, 'children' | 'ref'> &
+  StyleProps & { loading?: boolean; icon?: ReactNode; children?: ReactNode; ref?: Ref<HTMLButtonElement> };
 
 export function Button({
   variant,
@@ -64,17 +69,36 @@ export function Button({
   type = 'button',
   ...props
 }: ButtonProps) {
+  const inactive = disabled || loading;
   return (
-    <button
+    <motion.button
       type={type}
-      disabled={disabled || loading}
+      disabled={inactive}
       aria-busy={loading || undefined}
       className={buttonClass({ variant, size, fullWidth, className })}
+      whileTap={inactive ? undefined : { scale: size === 'sm' ? 0.94 : 0.97 }}
+      transition={spring.snappy}
       {...props}
     >
-      {loading ? <Spinner size={size === 'sm' ? 14 : 18} /> : icon}
+      <AnimatePresence mode="popLayout" initial={false}>
+        {loading ? (
+          <motion.span
+            key="spinner"
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.6 }}
+            className="inline-flex"
+          >
+            <Spinner size={size === 'sm' ? 14 : 18} />
+          </motion.span>
+        ) : icon ? (
+          <motion.span key="icon" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} className="inline-flex">
+            {icon}
+          </motion.span>
+        ) : null}
+      </AnimatePresence>
       {children}
-    </button>
+    </motion.button>
   );
 }
 
@@ -97,14 +121,20 @@ export function IconButton({
   variant = 'glass',
   type = 'button',
   ...props
-}: ComponentProps<'button'> & { label: string; variant?: 'glass' | 'fill' | 'tint' }) {
+}: Omit<HTMLMotionProps<'button'>, 'children'> & {
+  label: string;
+  variant?: 'glass' | 'fill' | 'tint';
+  children?: ReactNode;
+}) {
   return (
-    <button
+    <motion.button
       type={type}
       aria-label={label}
       title={label}
+      whileTap={{ scale: 0.86 }}
+      transition={spring.snappy}
       className={cn(
-        'tap inline-flex size-11 shrink-0 items-center justify-center rounded-full',
+        'inline-flex size-11 shrink-0 items-center justify-center rounded-full',
         variant === 'glass' && 'glass-strong text-label',
         variant === 'fill' && 'bg-fill text-label',
         variant === 'tint' && 'bg-tint text-white',
@@ -113,7 +143,7 @@ export function IconButton({
       {...props}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }
 

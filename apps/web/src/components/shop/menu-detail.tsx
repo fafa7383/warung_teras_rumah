@@ -10,8 +10,10 @@ import {
   type MenuItemDto,
   type OptionGroupDto,
 } from '@wtr/shared';
+import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { AnimatedRupiah } from '@/components/motion/animated-number';
 import { Button, IconButton } from '@/components/ui/button';
 import { ChoiceRow, Stepper } from '@/components/ui/controls';
 import { Flame, X } from '@/components/ui/icons';
@@ -20,6 +22,7 @@ import { Sheet, SheetBody, SheetFooter } from '@/components/ui/sheet';
 import { useCartStore } from '@/lib/cart-store';
 import { cn } from '@/lib/cn';
 import { useHydrated } from '@/lib/hooks';
+import { easeOutExpo, fadeUp, staggerChildren } from '@/lib/motion';
 import { toast } from '@/lib/toast-store';
 import { useAddToCart } from '@/lib/use-add-to-cart';
 import { MenuImage } from './menu-image';
@@ -52,6 +55,7 @@ function MenuDetailContent({ item, editKey, onDone }: MenuDetailProps) {
   const editLine = useCartStore((state) => state.lines.find((line) => line.key === editKey));
   const replaceLine = useCartStore((state) => state.replaceLine);
   const addToCart = useAddToCart();
+  const ctaRef = useRef<HTMLButtonElement>(null);
 
   const [selected, setSelected] = useState<string[]>(() => editLine?.optionIds ?? getDefaultOptionIds(item));
   const [quantity, setQuantity] = useState(() => editLine?.quantity ?? 1);
@@ -93,42 +97,69 @@ function MenuDetailContent({ item, editKey, onDone }: MenuDetailProps) {
       onDone();
       return;
     }
-    if (addToCart(item, selected, quantity)) onDone();
+    // Gambar menu terbang dari tombol ke keranjang setelah sheet turun.
+    if (addToCart(item, selected, quantity, { source: ctaRef.current, launchDelayMs: 260 })) onDone();
   };
 
   return (
     <>
       <SheetBody>
         <div className="relative aspect-video w-full overflow-hidden bg-canvas">
-          <MenuImage
-            src={item.imageUrl}
-            alt={item.name}
-            categorySlug={item.categorySlug}
-            sizes="(min-width: 1024px) 560px, 100vw"
-            grayscale={!item.isAvailable}
-            priority
-          />
+          <motion.div
+            className="size-full"
+            initial={{ scale: 1.15, opacity: 0.4 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.7, ease: easeOutExpo }}
+          >
+            <MenuImage
+              src={item.imageUrl}
+              alt={item.name}
+              categorySlug={item.categorySlug}
+              sizes="(min-width: 1024px) 560px, 100vw"
+              grayscale={!item.isAvailable}
+              priority
+            />
+          </motion.div>
           <IconButton label="Tutup" onClick={onDone} className="absolute top-4 right-4 z-10">
             <X size={20} strokeWidth={2.6} aria-hidden="true" />
           </IconButton>
         </div>
 
-        <div className="px-4 pt-4 pb-5">
-          <h2 className="text-title-2 font-bold">{item.name}</h2>
-          {item.description && <p className="mt-1 text-subhead text-label-2">{item.description}</p>}
-          <p className="mt-2 text-headline text-tint">{formatRupiah(item.basePrice)}</p>
-          {!item.isAvailable && (
-            <p className="mt-3 rounded-control bg-fill px-3 py-2 text-footnote text-label-2">
-              Yah, menu ini lagi habis. Coba menu lain dulu ya, Kak.
-            </p>
+        <motion.div
+          className="px-4 pt-4 pb-5"
+          variants={staggerChildren(0.06, 0.08)}
+          initial="hidden"
+          animate="show"
+        >
+          <motion.h2 variants={fadeUp} className="text-title-2 font-bold">
+            {item.name}
+          </motion.h2>
+          {item.description && (
+            <motion.p variants={fadeUp} className="mt-1 text-subhead text-label-2">
+              {item.description}
+            </motion.p>
           )}
-        </div>
+          <motion.p variants={fadeUp} className="mt-2 text-headline text-tint">
+            {formatRupiah(item.basePrice)}
+          </motion.p>
+          {!item.isAvailable && (
+            <motion.p variants={fadeUp} className="mt-3 rounded-control bg-fill px-3 py-2 text-footnote text-label-2">
+              Yah, menu ini lagi habis. Coba menu lain dulu ya, Kak.
+            </motion.p>
+          )}
+        </motion.div>
 
-        <div className="flex flex-col gap-6 bg-canvas px-4 pt-5 pb-8">
+        <motion.div
+          className="flex flex-col gap-6 bg-canvas px-4 pt-5 pb-8"
+          variants={staggerChildren(0.07, 0.15)}
+          initial="hidden"
+          animate="show"
+        >
           {item.optionGroups.map((group) => {
             const hint = groupHint(group);
             const missing = missingGroups.has(group.id);
             return (
+              <motion.div key={group.id} variants={fadeUp}>
               <ListSection
                 key={group.id}
                 header={group.name}
@@ -142,7 +173,21 @@ function MenuDetailContent({ item, editKey, onDone }: MenuDetailProps) {
                     {hint.text}
                   </span>
                 }
-                footer={missing ? <span className="text-red-text">{missingMessage(group)}</span> : undefined}
+                footer={
+                  <AnimatePresence initial={false}>
+                    {missing && (
+                      <motion.span
+                        key="missing"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="block text-red-text"
+                      >
+                        {missingMessage(group)}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                }
               >
                 <div role={group.type === 'SINGLE' ? 'radiogroup' : 'group'} aria-label={group.name} className="list-separators">
                   {group.options.map((option) => {
@@ -172,24 +217,32 @@ function MenuDetailContent({ item, editKey, onDone }: MenuDetailProps) {
                   })}
                 </div>
               </ListSection>
+              </motion.div>
             );
           })}
 
-          <ListSection>
-            <ListRow
-              title="Jumlah"
-              trailing={
-                <Stepper value={quantity} onChange={setQuantity} min={1} max={MAX_ITEM_QTY} label="jumlah porsi" />
-              }
-            />
-          </ListSection>
-        </div>
+          <motion.div variants={fadeUp}>
+            <ListSection>
+              <ListRow
+                title="Jumlah"
+                trailing={
+                  <Stepper value={quantity} onChange={setQuantity} min={1} max={MAX_ITEM_QTY} label="jumlah porsi" />
+                }
+              />
+            </ListSection>
+          </motion.div>
+        </motion.div>
       </SheetBody>
       <SheetFooter>
-        <Button fullWidth disabled={!canSubmit} onClick={submit}>
-          {!item.isAvailable
-            ? 'Menu ini lagi habis'
-            : `${editLine ? 'Simpan Perubahan' : 'Tambah ke Keranjang'} · ${formatRupiah(priced.lineTotal)}`}
+        <Button ref={ctaRef} fullWidth disabled={!canSubmit} onClick={submit} className={cn(canSubmit && 'shine')}>
+          {!item.isAvailable ? (
+            'Menu ini lagi habis'
+          ) : (
+            <>
+              {editLine ? 'Simpan Perubahan' : 'Tambah ke Keranjang'} ·&nbsp;
+              <AnimatedRupiah value={priced.lineTotal} />
+            </>
+          )}
         </Button>
       </SheetFooter>
     </>

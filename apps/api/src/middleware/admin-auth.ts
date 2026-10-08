@@ -1,7 +1,7 @@
 import type { RequestHandler, Response } from 'express';
-import { env } from '../env';
 import { ADMIN_COOKIE, verifySession } from '../lib/auth';
 import { HttpError } from '../lib/http-error';
+import { isAllowedOrigin } from '../lib/origins';
 import { prisma } from '../lib/prisma';
 
 export interface AdminSession {
@@ -38,8 +38,7 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 /** Semua request admin yang mengubah data wajib berasal dari domain web sendiri (PRD 10.6). */
 export const requireSameOrigin: RequestHandler = (req, _res, next) => {
   if (SAFE_METHODS.has(req.method)) return next();
-  const origin = req.get('origin');
-  if (!origin || !env.WEB_ORIGIN.includes(origin)) {
+  if (!isAllowedOrigin(req.get('origin'))) {
     throw new HttpError(403, 'FORBIDDEN_ORIGIN', 'Permintaan ditolak');
   }
   next();

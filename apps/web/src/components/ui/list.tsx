@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 import { ChevronRight, type LucideIcon } from './icons';
 
@@ -10,6 +10,7 @@ export function ListSection({
   trailing,
   children,
   className,
+  style,
   id,
 }: {
   header?: ReactNode;
@@ -17,10 +18,11 @@ export function ListSection({
   trailing?: ReactNode;
   children: ReactNode;
   className?: string;
+  style?: CSSProperties;
   id?: string;
 }) {
   return (
-    <section id={id} className={cn('flex flex-col gap-1.5', className)}>
+    <section id={id} className={cn('flex flex-col gap-1.5', className)} style={style}>
       {(header || trailing) && (
         <div className="flex items-end justify-between gap-3 px-4">
           {header && <h2 className="text-footnote uppercase text-label-2">{header}</h2>}

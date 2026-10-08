@@ -4,8 +4,19 @@ import type { StoreStatus } from '@wtr/shared';
 import { Clock } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
 
-/** "● Buka · tutup pukul 21.00" / "● Tutup · buka lagi besok 10.00" (PRD 6.1). */
-export function StoreStatusPill({ status, className }: { status: StoreStatus; className?: string }) {
+/**
+ * "● Buka · tutup pukul 21.00" / "● Tutup · buka lagi besok 10.00" (PRD 6.1).
+ * `tone="glass"` untuk di atas gambar langit header Home.
+ */
+export function StoreStatusPill({
+  status,
+  tone = 'solid',
+  className,
+}: {
+  status: StoreStatus;
+  tone?: 'solid' | 'glass';
+  className?: string;
+}) {
   const text = status.isOpen
     ? `Buka · tutup pukul ${status.closesAt ?? ''}`
     : status.nextOpenLabel
@@ -17,12 +28,19 @@ export function StoreStatusPill({ status, className }: { status: StoreStatus; cl
     <span
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-footnote font-semibold',
-        status.isOpen ? 'bg-green-soft text-green-text' : 'bg-red-soft text-red-text',
+        tone === 'glass'
+          ? 'bg-white/20 text-white ring-1 ring-white/30 backdrop-blur-md'
+          : status.isOpen
+            ? 'bg-green-soft text-green-text'
+            : 'bg-red-soft text-red-text',
         className,
       )}
     >
       <span
-        className={cn('size-2 rounded-full', status.isOpen ? 'animate-pulse-dot bg-green' : 'bg-red')}
+        className={cn(
+          'size-2 rounded-full',
+          status.isOpen ? 'animate-pulse-dot bg-green' : 'bg-red',
+        )}
         aria-hidden="true"
       />
       {text}
@@ -31,7 +49,13 @@ export function StoreStatusPill({ status, className }: { status: StoreStatus; cl
 }
 
 /** Kartu peringatan saat warung tutup; menu tetap bisa dilihat. */
-export function StoreClosedNotice({ status, context = 'home' }: { status: StoreStatus; context?: 'home' | 'cart' }) {
+export function StoreClosedNotice({
+  status,
+  context = 'home',
+}: {
+  status: StoreStatus;
+  context?: 'home' | 'cart';
+}) {
   if (status.isOpen) return null;
   const reopen = status.nextOpenLabel ? ` Buka lagi ${status.nextOpenLabel}.` : '';
   return (

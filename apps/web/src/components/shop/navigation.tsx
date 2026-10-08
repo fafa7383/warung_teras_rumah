@@ -1,14 +1,17 @@
 'use client';
 
-import { formatRupiah } from '@wtr/shared';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion, useAnimationControls } from 'motion/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
 import { Logo } from '@/components/brand/logo';
-import { ChevronRight, History, House, ShoppingBag, Utensils, type LucideIcon } from '@/components/ui/icons';
+import { AnimatedRupiah, RollingNumber } from '@/components/motion/animated-number';
+import { useCartTarget } from '@/components/motion/fly-to-cart';
+import { ChevronRight, House, ShoppingBag, Utensils, type LucideIcon } from '@/components/ui/icons';
 import { cartTotals, useCartStore } from '@/lib/cart-store';
 import { cn } from '@/lib/cn';
 import { useHydrated } from '@/lib/hooks';
+import { spring } from '@/lib/motion';
 import { useUiStore } from '@/lib/ui-store';
 
 interface Tab {
@@ -22,7 +25,13 @@ interface Tab {
 const TABS: Tab[] = [
   { href: '/', label: 'Home', icon: House, match: (p) => p === '/' },
   { href: '/menu', label: 'Menu', icon: Utensils, match: (p) => p.startsWith('/menu') },
-  { href: '/keranjang', label: 'Keranjang', icon: ShoppingBag, match: (p) => p.startsWith('/keranjang'), cart: true },
+  {
+    href: '/keranjang',
+    label: 'Keranjang',
+    icon: ShoppingBag,
+    match: (p) => p.startsWith('/keranjang'),
+    cart: true,
+  },
 ];
 
 function useCartCount() {
@@ -31,12 +40,47 @@ function useCartCount() {
   return hydrated ? cartTotals(lines) : { count: 0, subtotal: 0 };
 }
 
+/** Badge jumlah keranjang: muncul dengan pegas, angkanya bergulir saat berubah. */
 function CartBadge({ count }: { count: number }) {
-  if (count === 0) return null;
   return (
-    <span className="absolute -top-1.5 -right-3 min-w-[18px] rounded-full bg-tint px-1 text-center text-caption leading-[18px] font-bold text-white ring-2 ring-white">
-      {count > 9 ? '9+' : count}
-    </span>
+    <AnimatePresence>
+      {count > 0 && (
+        <motion.span
+          key="badge"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          transition={spring.bouncy}
+          className="absolute -top-1.5 -right-3 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-tint px-1 text-caption leading-none font-bold text-white ring-2 ring-white"
+        >
+          <RollingNumber value={count > 9 ? '9+' : count} />
+        </motion.span>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/** Ikon keranjang yang memantul setiap ada menu tiba (tujuan animasi "terbang"). */
+function CartIcon({ size, strokeWidth }: { size: number; strokeWidth: number }) {
+  const bump = useUiStore((state) => state.cartBump);
+  const controls = useAnimationControls();
+  const targetRef = useCartTarget();
+  const { count } = useCartCount();
+
+  useEffect(() => {
+    if (bump === 0) return;
+    void controls.start({
+      scale: [1, 1.38, 0.9, 1.06, 1],
+      rotate: [0, -14, 10, -4, 0],
+      transition: { duration: 0.6, ease: 'easeOut' },
+    });
+  }, [bump, controls]);
+
+  return (
+    <motion.span ref={targetRef} animate={controls} className="relative inline-flex">
+      <ShoppingBag size={size} strokeWidth={strokeWidth} aria-hidden="true" />
+      <CartBadge count={count} />
+    </motion.span>
   );
 }
 
@@ -44,18 +88,21 @@ function CartBadge({ count }: { count: number }) {
 export function TabBar() {
   const pathname = usePathname();
   const overlays = useUiStore((state) => state.overlays);
-  const bump = useUiStore((state) => state.cartBump);
   const { count } = useCartCount();
+  const hidden = overlays > 0;
 
   return (
-    <nav
+    <motion.nav
       aria-label="Navigasi utama"
+      initial={false}
+      animate={{ y: hidden ? 140 : 0, opacity: hidden ? 0 : 1 }}
+      transition={spring.smooth}
       className={cn(
-        'fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(12px,env(safe-area-inset-bottom))] transition-transform duration-300 ease-ios lg:hidden',
-        overlays > 0 && 'pointer-events-none translate-y-[150%]',
+        'fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden',
+        hidden && 'pointer-events-none',
       )}
     >
-      <div className="glass-strong flex h-16 w-full max-w-[420px] items-center rounded-full p-1.5">
+      <div className="flex h-16 w-full max-w-[420px] items-center rounded-full glass-strong p-1.5">
         {TABS.map((tab) => {
           const active = tab.match(pathname);
           const Icon = tab.icon;
@@ -65,7 +112,7 @@ export function TabBar() {
               href={tab.href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'relative flex h-full flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-caption font-semibold transition-colors duration-150',
+                'relative flex h-full flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-caption font-semibold transition-colors duration-200',
                 active ? 'text-tint' : 'text-label-2',
               )}
             >
@@ -73,30 +120,39 @@ export function TabBar() {
                 <motion.span
                   layoutId="buyer-tab-pill"
                   className="absolute inset-0 rounded-full bg-black/[0.06]"
-                  transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+                  transition={spring.smooth}
                 />
               )}
-              <span
-                key={tab.cart ? `bump-${bump}` : undefined}
-                className={cn('relative', tab.cart && bump > 0 && 'animate-bounce-once')}
+              <motion.span
+                whileTap={{ scale: 0.82 }}
+                transition={spring.snappy}
+                className="relative inline-flex"
               >
-                <Icon size={24} strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
-                {tab.cart && <CartBadge count={count} />}
-              </span>
+                {tab.cart ? (
+                  <CartIcon size={24} strokeWidth={active ? 2.4 : 2} />
+                ) : (
+                  <motion.span
+                    animate={active ? { y: [0, -3, 0] } : { y: 0 }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    className="inline-flex"
+                  >
+                    <Icon size={24} strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
+                  </motion.span>
+                )}
+              </motion.span>
               <span className="relative">{tab.label}</span>
               {tab.cart && count > 0 && <span className="sr-only">, {count} item</span>}
             </Link>
           );
         })}
       </div>
-    </nav>
+    </motion.nav>
   );
 }
 
 /** Top nav desktop ≥ 1024 px: logo kiri, menu tengah, keranjang kanan (PRD 4.4). */
 export function TopNav() {
   const pathname = usePathname();
-  const bump = useUiStore((state) => state.cartBump);
   const { count } = useCartCount();
   const links = [
     { href: '/', label: 'Home', active: pathname === '/' },
@@ -105,7 +161,7 @@ export function TopNav() {
   ];
 
   return (
-    <header className="glass hairline-b sticky top-0 z-40 hidden lg:block">
+    <header className="sticky top-0 z-40 hidden glass hairline-b lg:block">
       <div className="mx-auto flex h-16 max-w-content items-center gap-6 px-6">
         <Link href="/" className="flex-1">
           <Logo compact size={30} />
@@ -117,11 +173,18 @@ export function TopNav() {
               href={link.href}
               aria-current={link.active ? 'page' : undefined}
               className={cn(
-                'tap rounded-full px-4 py-1.5 text-subhead font-semibold',
-                link.active ? 'bg-white text-label shadow-[0_2px_6px_rgb(0_0_0/0.08)]' : 'text-label-2',
+                'relative rounded-full px-4 py-1.5 text-subhead font-semibold transition-colors duration-200',
+                link.active ? 'text-label' : 'text-label-2 hover:text-label',
               )}
             >
-              {link.label}
+              {link.active && (
+                <motion.span
+                  layoutId="desktop-nav-pill"
+                  className="absolute inset-0 rounded-full bg-white shadow-[0_2px_6px_rgb(0_0_0/0.08)]"
+                  transition={spring.smooth}
+                />
+              )}
+              <span className="relative">{link.label}</span>
             </Link>
           ))}
         </nav>
@@ -129,12 +192,9 @@ export function TopNav() {
           <Link
             href="/keranjang"
             aria-label={`Keranjang, ${count} item`}
-            className="tap relative flex size-11 items-center justify-center rounded-full bg-fill text-label"
+            className="relative flex size-11 tap-scale items-center justify-center rounded-full bg-fill text-label"
           >
-            <span key={`bump-${bump}`} className={cn('relative', bump > 0 && 'animate-bounce-once')}>
-              <ShoppingBag size={22} aria-hidden="true" />
-              <CartBadge count={count} />
-            </span>
+            <CartIcon size={22} strokeWidth={2} />
           </Link>
         </div>
       </div>
@@ -150,41 +210,40 @@ export function CartMiniBar() {
   const visible = count > 0 && !pathname.startsWith('/keranjang') && overlays === 0;
 
   return (
-    <div
-      className={cn(
-        'fixed inset-x-0 z-30 flex justify-center px-4 transition-all duration-300 ease-ios xl:hidden',
-        'bottom-[calc(max(12px,env(safe-area-inset-bottom))+76px)] lg:bottom-6',
-        visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0',
-      )}
-      aria-hidden={!visible}
-    >
-      <Link
-        href="/keranjang"
-        tabIndex={visible ? undefined : -1}
-        className="tap flex h-14 w-full max-w-[420px] items-center gap-3 rounded-full bg-tint pr-2 pl-5 text-white shadow-[0_10px_30px_rgb(214_60_60/0.35)]"
-      >
-        <ShoppingBag size={20} aria-hidden="true" />
-        <span className="flex-1 text-left text-subhead font-semibold">
-          {count} item · {formatRupiah(subtotal)}
-        </span>
-        <span className="flex items-center gap-0.5 rounded-full bg-white/20 py-2 pr-2.5 pl-3.5 text-footnote font-semibold">
-          Lihat Keranjang
-          <ChevronRight size={16} aria-hidden="true" />
-        </span>
-      </Link>
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(max(12px,env(safe-area-inset-bottom))+76px)] z-30 flex justify-center px-4 lg:bottom-6 xl:hidden">
+      <AnimatePresence>
+        {visible && (
+          <motion.div
+            key="mini-bar"
+            initial={{ y: 40, opacity: 0, scale: 0.92 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 30, opacity: 0, scale: 0.94 }}
+            transition={spring.smooth}
+            className="pointer-events-auto w-full max-w-[420px]"
+          >
+            <Link
+              href="/keranjang"
+              className="flex h-14 w-full tap-scale items-center gap-3 rounded-full bg-tint pr-2 pl-5 text-white shadow-[0_10px_30px_rgb(214_60_60/0.35)]"
+            >
+              <ShoppingBag size={20} aria-hidden="true" />
+              <span className="flex flex-1 items-center gap-1 text-left text-subhead font-semibold">
+                <RollingNumber value={count} /> item ·
+                <AnimatedRupiah value={subtotal} />
+              </span>
+              <span className="flex items-center gap-0.5 rounded-full bg-white/20 py-2 pr-2.5 pl-3.5 text-footnote font-semibold">
+                Lihat Keranjang
+                <motion.span
+                  animate={{ x: [0, 3, 0] }}
+                  transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                  className="inline-flex"
+                >
+                  <ChevronRight size={16} aria-hidden="true" />
+                </motion.span>
+              </span>
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
-  );
-}
-
-/** Ikon riwayat di header Home (PRD 6.1). */
-export function HistoryLink() {
-  return (
-    <Link
-      href="/riwayat"
-      aria-label="Riwayat pesanan"
-      className="tap glass-strong flex size-11 items-center justify-center rounded-full text-label lg:hidden"
-    >
-      <History size={22} aria-hidden="true" />
-    </Link>
   );
 }

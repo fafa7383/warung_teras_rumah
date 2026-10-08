@@ -43,7 +43,12 @@ const envSchema = z.object({
   WA_GATEWAY_TOKEN: optionalString,
 });
 
-const parsed = envSchema.safeParse(process.env);
+// Saat development, PORT sering diisi alat lain untuk server web (mis. Next.js di 3000),
+// jadi API memakai API_PORT. Di produksi (Railway) PORT diisi platform dan wajib dipakai.
+const port =
+  process.env.NODE_ENV === 'production' ? (process.env.PORT ?? process.env.API_PORT) : process.env.API_PORT;
+
+const parsed = envSchema.safeParse({ ...process.env, PORT: port });
 if (!parsed.success) {
   console.error(`✗ Environment variable di apps/api/.env belum benar:\n${z.prettifyError(parsed.error)}`);
   process.exit(1);

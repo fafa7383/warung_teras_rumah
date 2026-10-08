@@ -1,11 +1,13 @@
 'use client';
 
-import { motion } from 'motion/react';
-import { useId, type ReactNode } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useId, useState, type ReactNode } from 'react';
+import { RollingNumber } from '@/components/motion/animated-number';
 import { cn } from '@/lib/cn';
-import { Check, Minus, Plus } from './icons';
+import { spring } from '@/lib/motion';
+import { Minus, Plus } from './icons';
 
-/** Switch iOS 51 × 31 dengan warna hijau sistem. */
+/** Switch iOS 51 × 31: tombol bulat meluncur dengan pegas. */
 export function Switch({
   checked,
   onChange,
@@ -18,29 +20,31 @@ export function Switch({
   disabled?: boolean;
 }) {
   return (
-    <button
+    <motion.button
       type="button"
       role="switch"
       aria-checked={checked}
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={cn(
-        'relative h-[31px] w-[51px] shrink-0 rounded-full p-[2px] transition-colors duration-200 ease-standard disabled:opacity-40',
-        checked ? 'bg-green' : 'bg-fill-2',
-      )}
+      animate={{ backgroundColor: checked ? '#34C759' : 'rgba(120,120,128,0.2)' }}
+      transition={{ duration: 0.2 }}
+      whileTap={disabled ? undefined : 'pressed'}
+      className="relative flex h-[31px] w-[51px] shrink-0 items-center rounded-full p-[2px] disabled:opacity-40"
     >
-      <span
-        className={cn(
-          'block size-[27px] rounded-full bg-white shadow-[0_3px_8px_rgb(0_0_0/0.15),0_1px_1px_rgb(0_0_0/0.16)] transition-transform duration-200 ease-ios',
-          checked ? 'translate-x-5' : 'translate-x-0',
-        )}
+      <motion.span
+        layout
+        transition={spring.snappy}
+        variants={{ pressed: { width: 33 } }}
+        initial={false}
+        style={{ marginLeft: checked ? 'auto' : 0 }}
+        className="block h-[27px] w-[27px] rounded-full bg-white shadow-[0_3px_8px_rgb(0_0_0/0.15),0_1px_1px_rgb(0_0_0/0.16)]"
       />
-    </button>
+    </motion.button>
   );
 }
 
-/** Stepper kapsul "− 1 +" (PRD 3.6: tombol 36 px). */
+/** Stepper kapsul "− 1 +": angka bergulir naik/turun, tombol memantul saat ditekan. */
 export function Stepper({
   value,
   onChange,
@@ -56,30 +60,41 @@ export function Stepper({
   size?: 'sm' | 'md';
   label: string;
 }) {
+  const [direction, setDirection] = useState<1 | -1>(1);
   const buttonSize = size === 'sm' ? 'size-8' : 'size-9';
+  const change = (delta: 1 | -1) => {
+    setDirection(delta);
+    onChange(value + delta);
+  };
+
   return (
     <div className="inline-flex items-center rounded-full bg-fill p-0.5" role="group" aria-label={label}>
-      <button
+      <motion.button
         type="button"
         aria-label={`Kurangi ${label}`}
-        onClick={() => onChange(value - 1)}
+        onClick={() => change(-1)}
         disabled={value <= min}
-        className={cn('tap flex items-center justify-center rounded-full text-label disabled:text-label-3', buttonSize)}
+        whileTap={{ scale: 0.8 }}
+        transition={spring.snappy}
+        className={cn('flex items-center justify-center rounded-full text-label disabled:text-label-3', buttonSize)}
       >
         <Minus size={18} strokeWidth={2.4} aria-hidden="true" />
-      </button>
-      <span className="min-w-7 text-center text-headline tabular-nums" aria-live="polite">
+      </motion.button>
+      <span className="sr-only" aria-live="polite">
         {value}
       </span>
-      <button
+      <RollingNumber value={value} direction={direction} className="min-w-7 justify-center text-headline" />
+      <motion.button
         type="button"
         aria-label={`Tambah ${label}`}
-        onClick={() => onChange(value + 1)}
+        onClick={() => change(1)}
         disabled={value >= max}
-        className={cn('tap flex items-center justify-center rounded-full text-label disabled:text-label-3', buttonSize)}
+        whileTap={{ scale: 0.8 }}
+        transition={spring.snappy}
+        className={cn('flex items-center justify-center rounded-full text-label disabled:text-label-3', buttonSize)}
       >
         <Plus size={18} strokeWidth={2.4} aria-hidden="true" />
-      </button>
+      </motion.button>
     </div>
   );
 }
@@ -104,26 +119,57 @@ export function SegmentedControl<T extends string>({
       {options.map((option) => {
         const active = option.value === value;
         return (
-          <button
+          <motion.button
             key={option.value}
             type="button"
             role="tab"
             aria-selected={active}
             onClick={() => onChange(option.value)}
+            whileTap={{ scale: 0.96 }}
             className="relative min-h-8 flex-1 rounded-[8px] px-2 text-footnote font-semibold"
           >
             {active && (
               <motion.span
                 layoutId={layoutId}
                 className="absolute inset-0 rounded-[8px] bg-white shadow-[0_3px_8px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.04)]"
-                transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                transition={spring.smooth}
               />
             )}
-            <span className={cn('relative', active ? 'text-label' : 'text-label-2')}>{option.label}</span>
-          </button>
+            <span className={cn('relative transition-colors duration-200', active ? 'text-label' : 'text-label-2')}>
+              {option.label}
+            </span>
+          </motion.button>
         );
       })}
     </div>
+  );
+}
+
+/** Centang yang tergambar dengan pegas saat dipilih. */
+function AnimatedCheck({ size, strokeWidth }: { size: number; strokeWidth: number }) {
+  return (
+    <motion.svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      initial={{ scale: 0.4, opacity: 0, rotate: -15 }}
+      animate={{ scale: 1, opacity: 1, rotate: 0 }}
+      exit={{ scale: 0.4, opacity: 0 }}
+      transition={spring.bouncy}
+      aria-hidden="true"
+    >
+      <motion.path
+        d="M5 12.5l4.5 4.5L19 7.5"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 0.28, ease: 'easeOut' }}
+      />
+    </motion.svg>
   );
 }
 
@@ -163,17 +209,24 @@ export function ChoiceRow({
       </span>
       {trailing && <span className="shrink-0 text-subhead text-label-2">{trailing}</span>}
       {multiple ? (
-        <span
-          className={cn(
-            'flex size-[22px] shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors',
-            selected ? 'border-tint bg-tint text-white' : 'border-label-3',
-          )}
+        <motion.span
+          animate={{
+            backgroundColor: selected ? '#D63C3C' : 'rgba(255,255,255,0)',
+            borderColor: selected ? '#D63C3C' : '#AEAEB2',
+            scale: selected ? [1, 1.15, 1] : 1,
+          }}
+          transition={{ duration: 0.25 }}
+          className="flex size-[22px] shrink-0 items-center justify-center rounded-full border-[1.5px] text-white"
         >
-          {selected && <Check size={14} strokeWidth={3} aria-hidden="true" />}
-        </span>
+          <AnimatePresence initial={false}>
+            {selected && <AnimatedCheck key="check" size={14} strokeWidth={3.4} />}
+          </AnimatePresence>
+        </motion.span>
       ) : (
         <span className="flex size-[22px] shrink-0 items-center justify-center text-tint">
-          {selected && <Check size={20} strokeWidth={2.6} aria-hidden="true" />}
+          <AnimatePresence initial={false}>
+            {selected && <AnimatedCheck key="check" size={20} strokeWidth={2.8} />}
+          </AnimatePresence>
         </span>
       )}
     </button>

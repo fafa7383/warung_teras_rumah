@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "prisma generate && node --watch --import tsx src/index.ts",
     "build": "prisma generate && tsup",
     "start": "node --enable-source-maps dist/index.js",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "prisma generate && tsc --noEmit",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "prisma db seed",
+    "db:seed": "prisma generate && prisma db seed",
     "db:studio": "prisma studio",
     "storage:setup": "tsx src/scripts/setup-storage.ts",
     "vapid:generate": "tsx src/scripts/generate-vapid.ts"

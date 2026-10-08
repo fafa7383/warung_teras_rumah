@@ -1,6 +1,7 @@
 'use client';
 
 import type { MenuItemDto, MenuResponse } from '@wtr/shared';
+import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BowlArt } from '@/components/brand/food-art';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -8,6 +9,7 @@ import { SearchField } from '@/components/ui/fields';
 import { PageHeader } from '@/components/ui/page-header';
 import { cn } from '@/lib/cn';
 import { useDebouncedValue, usePrefersReducedMotion } from '@/lib/hooks';
+import { spring } from '@/lib/motion';
 import { useMenuQuery } from '@/lib/queries';
 import { useCartQuantities } from '@/lib/use-cart-quantities';
 import { MenuCard } from './menu-card';
@@ -139,20 +141,29 @@ export function MenuView({
           {chips.map((chip) => {
             const active = chip.slug === activeSlug;
             return (
-              <button
+              <motion.button
                 key={chip.slug}
                 type="button"
                 role="tab"
                 aria-selected={active}
                 data-chip={chip.slug}
                 onClick={() => scrollToCategory(chip.slug, reduceMotion ? 'auto' : 'smooth')}
+                whileTap={{ scale: 0.92 }}
+                transition={spring.snappy}
                 className={cn(
-                  'tap h-9 shrink-0 rounded-full px-4 text-subhead font-semibold transition-colors duration-150',
-                  active ? 'bg-tint-soft text-tint-pressed' : 'bg-surface text-label shadow-[0_1px_2px_rgb(0_0_0/0.06)]',
+                  'relative h-9 shrink-0 rounded-full bg-surface px-4 text-subhead font-semibold shadow-[0_1px_2px_rgb(0_0_0/0.06)] transition-colors duration-200',
+                  active ? 'text-tint-pressed' : 'text-label',
                 )}
               >
-                {chip.name}
-              </button>
+                {active && (
+                  <motion.span
+                    layoutId="menu-chip-pill"
+                    className="absolute inset-0 rounded-full bg-tint-soft"
+                    transition={spring.smooth}
+                  />
+                )}
+                <span className="relative">{chip.name}</span>
+              </motion.button>
             );
           })}
         </div>
@@ -177,13 +188,25 @@ export function MenuView({
               style={{ scrollMarginTop: STICKY_OFFSET }}
               aria-labelledby={`kategori-${category.slug}`}
             >
-              <h2 id={`kategori-${category.slug}`} className="mb-3 text-title-3 font-bold">
+              <h2 id={`kategori-${category.slug}`} className="reveal mb-3 text-title-3 font-bold">
                 {category.name} <span className="text-subhead font-medium text-label-2">· {items.length}</span>
               </h2>
               <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-3 @4xl:grid-cols-4">
-                {items.map((item) => (
-                  <MenuCard key={item.id} item={item} quantityInCart={quantities.get(item.id)} />
-                ))}
+                {/* Saat mencari, kartu yang hilang mengecil keluar dan sisanya bergeser halus ke tempat baru. */}
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {items.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      layout="position"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.85 }}
+                      transition={spring.smooth}
+                    >
+                      <MenuCard item={item} quantityInCart={quantities.get(item.id)} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             </section>
           ))}

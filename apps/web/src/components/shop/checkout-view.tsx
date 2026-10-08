@@ -16,10 +16,13 @@ import {
   type StoreDto,
 } from '@wtr/shared';
 import { useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Controller, useForm, type DefaultValues } from 'react-hook-form';
 import { BowlArt } from '@/components/brand/food-art';
+import { AnimatedRupiah } from '@/components/motion/animated-number';
+import { ConfettiBurst, DrawnCheck, RingPulse } from '@/components/motion/celebration';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { ChoiceRow, Switch } from '@/components/ui/controls';
 import { ConfirmDialog } from '@/components/ui/dialog';
@@ -35,6 +38,7 @@ import { cn } from '@/lib/cn';
 import { vibrate } from '@/lib/device';
 import { useHydrated } from '@/lib/hooks';
 import { useCustomerStore, useHistoryStore } from '@/lib/local-stores';
+import { riseOrder, spring } from '@/lib/motion';
 import { toCartLineInput } from '@/lib/orders-client';
 import { queryKeys, useStoreQuery } from '@/lib/queries';
 import { toast } from '@/lib/toast-store';
@@ -66,36 +70,114 @@ function OrderTypeCard({
   buttonRef?: (element: HTMLButtonElement | null) => void;
 }) {
   return (
-    <button
+    <motion.button
       ref={buttonRef}
       type="button"
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
-      className={cn(
-        'tap-scale relative flex flex-col items-start gap-2.5 rounded-section bg-surface p-4 text-left ring-2 transition-shadow duration-150',
-        selected ? 'ring-tint' : 'ring-transparent',
-      )}
+      whileTap={{ scale: 0.96 }}
+      animate={{ boxShadow: selected ? '0 0 0 2px #D63C3C, 0 8px 24px rgba(214,60,60,0.18)' : '0 0 0 0px rgba(214,60,60,0)' }}
+      transition={spring.snappy}
+      className="relative flex flex-col items-start gap-2.5 rounded-section bg-surface p-4 text-left"
     >
-      <span className={cn('flex size-10 items-center justify-center rounded-full', selected ? 'bg-tint text-white' : 'bg-tint-soft text-tint')}>
+      <motion.span
+        animate={{
+          backgroundColor: selected ? '#D63C3C' : '#FDECEB',
+          color: selected ? '#FFFFFF' : '#D63C3C',
+          rotate: selected ? [0, -12, 8, 0] : 0,
+          scale: selected ? [1, 1.15, 1] : 1,
+        }}
+        transition={{ duration: 0.45 }}
+        className="flex size-10 items-center justify-center rounded-full"
+      >
         <Icon size={22} aria-hidden="true" />
-      </span>
+      </motion.span>
       <span>
         <span className="block text-headline">{title}</span>
         <span className="block text-footnote text-label-2">{subtitle}</span>
       </span>
-      {selected && <CircleCheck size={22} className="absolute top-3 right-3 fill-tint text-white" aria-hidden="true" />}
-    </button>
+      <AnimatePresence>
+        {selected && (
+          <motion.span
+            key="check"
+            initial={{ scale: 0, rotate: -90 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={spring.bouncy}
+            className="absolute top-3 right-3 inline-flex"
+          >
+            <CircleCheck size={22} className="fill-tint text-white" aria-hidden="true" />
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
   );
 }
 
 function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
   return (
-    <p className="flex items-center gap-1 px-4 text-footnote text-red-text" role="alert">
-      <CircleAlert size={14} aria-hidden="true" />
-      {message}
-    </p>
+    <AnimatePresence initial={false}>
+      {message && (
+        <motion.p
+          key={message}
+          initial={{ opacity: 0, y: -4, height: 0 }}
+          animate={{ opacity: 1, y: 0, height: 'auto' }}
+          exit={{ opacity: 0, y: -4, height: 0 }}
+          className="flex items-center gap-1 px-4 text-footnote text-red-text"
+          role="alert"
+        >
+          <CircleAlert size={14} aria-hidden="true" />
+          {message}
+        </motion.p>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/** Layar perayaan sesaat setelah pesanan berhasil dibuat. */
+function OrderPlaced({ code }: { code: string }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-canvas px-8 text-center">
+      <div className="relative flex size-40 items-center justify-center">
+        <RingPulse delay={0.25} />
+        <ConfettiBurst count={34} />
+        <DrawnCheck size={104} />
+      </div>
+      <motion.h1
+        className="mt-6 text-title-1 font-bold"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...spring.gentle, delay: 0.45 }}
+      >
+        Pesananmu sudah kami terima!
+      </motion.h1>
+      <motion.p
+        className="mt-2 text-subhead text-label-2"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...spring.gentle, delay: 0.6 }}
+      >
+        Kode pesanan <span className="font-rounded font-semibold text-label">{code}</span>
+      </motion.p>
+      <motion.div
+        className="mt-8 h-1 w-40 overflow-hidden rounded-full bg-fill"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        aria-hidden="true"
+      >
+        <motion.div
+          className="h-full rounded-full bg-tint"
+          initial={{ width: '0%' }}
+          animate={{ width: '100%' }}
+          transition={{ duration: 1.1, delay: 0.8, ease: 'easeInOut' }}
+        />
+      </motion.div>
+      <span className="sr-only" role="status">
+        Pesanan {code} berhasil dibuat. Membuka halaman pesanan.
+      </span>
+    </div>
   );
 }
 
@@ -123,7 +205,7 @@ export function CheckoutView({ initialStore }: { initialStore: StoreDto | null }
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [confirmValues, setConfirmValues] = useState<CheckoutFormValues | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [placed, setPlaced] = useState(false);
+  const [placed, setPlaced] = useState<{ code: string; token: string } | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
 
   const form = useForm<CheckoutFormInput, unknown, CheckoutFormValues>({
@@ -227,10 +309,12 @@ export function CheckoutView({ initialStore }: { initialStore: StoreDto | null }
       }
       addHistory({ token: result.token, code: result.code, createdAt: new Date().toISOString() });
       vibrate([10, 40, 10]);
-      setPlaced(true);
       setConfirmValues(null);
+      setPlaced({ code: result.code, token: result.token });
       clearCart();
-      router.replace(`/pesanan/${result.token}`);
+      // Beri waktu animasi perayaan, sambil halaman pesanan dimuat di belakang.
+      router.prefetch(`/pesanan/${result.token}`);
+      setTimeout(() => router.replace(`/pesanan/${result.token}`), 1900);
     } catch (error) {
       setConfirmValues(null);
       resetCaptcha();
@@ -246,16 +330,7 @@ export function CheckoutView({ initialStore }: { initialStore: StoreDto | null }
     }
   };
 
-  if (placed) {
-    return (
-      <EmptyState
-        className="pt-32"
-        art={<BowlArt variant="bakso" size={96} spoon={false} />}
-        title="Pesananmu sudah kami terima!"
-        message="Sebentar, lagi membuka halaman pesanan…"
-      />
-    );
-  }
+  if (placed) return <OrderPlaced code={placed.code} />;
 
   if (!hydrated) {
     return (
@@ -288,7 +363,6 @@ export function CheckoutView({ initialStore }: { initialStore: StoreDto | null }
   }
 
   const isDelivery = orderType === 'DELIVERY';
-  const ctaLabel = storeOpen ? `Pesan Sekarang · ${formatRupiah(subtotal)}` : 'Warung lagi tutup';
 
   return (
     <>
@@ -308,10 +382,23 @@ export function CheckoutView({ initialStore }: { initialStore: StoreDto | null }
       >
         {store && <StoreClosedNotice status={store.status} context="cart" />}
 
-        <ListSection header={`Pesanan · ${count} item`}>
-          {lines.map((line) => (
-            <CartLineRow key={line.key} line={line} />
-          ))}
+        <ListSection header={`Pesanan · ${count} item`} className="animate-rise" style={riseOrder(0)}>
+          <AnimatePresence initial={false}>
+            {lines.map((line) => (
+              // Item yang dihapus menyusut keluar, baris lain bergeser naik dengan halus.
+              <motion.div
+                key={line.key}
+                layout="position"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0, x: -40 }}
+                transition={spring.smooth}
+                className="overflow-hidden"
+              >
+                <CartLineRow line={line} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
           <ListRow
             href="/menu"
             chevron={false}
@@ -320,7 +407,7 @@ export function CheckoutView({ initialStore }: { initialStore: StoreDto | null }
           />
         </ListSection>
 
-        <section className="flex flex-col gap-1.5">
+        <section className="animate-rise flex flex-col gap-1.5" style={riseOrder(1)}>
           <h2 className="px-4 text-footnote text-label-2 uppercase">Cara Pesan</h2>
           <Controller
             control={control}
@@ -350,7 +437,12 @@ export function CheckoutView({ initialStore }: { initialStore: StoreDto | null }
           />
         </section>
 
-        <ListSection header="Data Pemesan" footer="Riwayat & data hanya tersimpan di HP ini.">
+        <ListSection
+          header="Data Pemesan"
+          footer="Riwayat & data hanya tersimpan di HP ini."
+          className="animate-rise"
+          style={riseOrder(2)}
+        >
           <FieldRow label="Nama" error={formState.errors.customerName?.message}>
             {({ id, describedBy, invalid }) => (
               <TextInput
@@ -383,8 +475,17 @@ export function CheckoutView({ initialStore }: { initialStore: StoreDto | null }
               />
             )}
           </FieldRow>
+          <AnimatePresence initial={false}>
           {isDelivery && (
-            <>
+            // Kolom alamat membuka dengan halus saat memilih "Diantar".
+            <motion.div
+              key="delivery-fields"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={spring.smooth}
+              className="list-separators overflow-hidden"
+            >
               <FieldRow label="Alamat lengkap" error={formState.errors.address?.message}>
                 {({ id, describedBy, invalid }) => (
                   <TextArea
@@ -410,15 +511,16 @@ export function CheckoutView({ initialStore }: { initialStore: StoreDto | null }
                   />
                 )}
               </FieldRow>
-            </>
+            </motion.div>
           )}
+          </AnimatePresence>
           <ListRow
             title="Simpan data untuk pesanan berikutnya"
             trailing={<Switch checked={remember} onChange={setRemember} label="Simpan data pemesan" />}
           />
         </ListSection>
 
-        <section className="flex flex-col gap-1.5">
+        <section className="animate-rise flex flex-col gap-1.5" style={riseOrder(3)}>
           <Controller
             control={control}
             name="paymentMethod"
@@ -448,24 +550,41 @@ export function CheckoutView({ initialStore }: { initialStore: StoreDto | null }
           />
         </section>
 
-        <ListSection header="Ringkasan">
-          <SummaryRow label="Subtotal" value={formatRupiah(subtotal)} />
+        <ListSection header="Ringkasan" className="animate-rise" style={riseOrder(4)}>
+          <SummaryRow label="Subtotal" value={<AnimatedRupiah value={subtotal} />} />
           <SummaryRow label="Ongkir" value={<span className="font-semibold text-green-text">Gratis</span>} />
-          <SummaryRow label="Total" value={formatRupiah(subtotal)} strong />
+          <SummaryRow label="Total" value={<AnimatedRupiah value={subtotal} />} strong />
         </ListSection>
 
-        <TurnstileField ref={turnstileRef} onToken={setTurnstileToken} />
+        <div className="animate-rise" style={riseOrder(5)}>
+          <TurnstileField ref={turnstileRef} onToken={setTurnstileToken} />
+        </div>
 
         <div className="fixed inset-x-0 bottom-[calc(max(12px,env(safe-area-inset-bottom))+76px)] z-30 flex justify-center px-4 lg:bottom-6">
-          <Button
-            type="submit"
-            fullWidth
-            disabled={!storeOpen}
-            aria-disabled={!ready || undefined}
-            className={cn('max-w-[420px] shadow-float', !ready && storeOpen && 'opacity-50')}
+          <motion.div
+            className="w-full max-w-[420px]"
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ ...spring.smooth, delay: 0.25 }}
           >
-            {ctaLabel}
-          </Button>
+            <Button
+              type="submit"
+              fullWidth
+              disabled={!storeOpen}
+              aria-disabled={!ready || undefined}
+              animate={{ opacity: ready || !storeOpen ? 1 : 0.55 }}
+              className={cn('shadow-float', ready && 'shine')}
+            >
+              {storeOpen ? (
+                <>
+                  Pesan Sekarang ·&nbsp;
+                  <AnimatedRupiah value={subtotal} />
+                </>
+              ) : (
+                'Warung lagi tutup'
+              )}
+            </Button>
+          </motion.div>
         </div>
       </form>
 

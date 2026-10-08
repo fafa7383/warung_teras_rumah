@@ -17,8 +17,6 @@ import { useUiStore } from '@/lib/ui-store';
 import { IconButton } from './button';
 import { X } from './icons';
 
-const SHEET_EASE = [0.32, 0.72, 0, 1] as const;
-
 /** Kunci scroll halaman, tutup dengan Escape, dan sembunyikan tab bar selama overlay terbuka. */
 export function useOverlay(open: boolean, onClose: () => void) {
   const onCloseRef = useRef(onClose);
@@ -84,11 +82,11 @@ export function Sheet({ open, onClose, label, children, size = 'auto', desktopWi
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center lg:p-6">
           <motion.div
-            className="absolute inset-0 bg-black/35"
+            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.3 }}
             onClick={onClose}
             aria-hidden="true"
           />
@@ -99,7 +97,7 @@ export function Sheet({ open, onClose, label, children, size = 'auto', desktopWi
             aria-label={label}
             tabIndex={-1}
             {...motionProps}
-            transition={{ duration: 0.32, ease: SHEET_EASE }}
+            transition={reduceMotion ? { duration: 0.2 } : { type: 'spring', stiffness: 380, damping: 36, mass: 0.9 }}
             drag={isDesktop || reduceMotion ? false : 'y'}
             dragControls={dragControls}
             dragListener={false}

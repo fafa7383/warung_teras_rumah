@@ -15,7 +15,7 @@ export async function processImage(buffer: Buffer, preset: ImagePreset): Promise
     throw new HttpError(413, 'FILE_TOO_LARGE', 'Ukuran foto maksimal 5 MB');
   }
 
-  let metadata: sharp.Metadata;
+  let metadata: Awaited<ReturnType<ReturnType<typeof sharp>['metadata']>>;
   try {
     metadata = await sharp(buffer).metadata();
   } catch {

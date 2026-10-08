@@ -9,6 +9,7 @@ import {
   type AdminOrderListItemDto,
   type AdminOrderTab,
 } from '@wtr/shared';
+import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -22,6 +23,7 @@ import { useAdminOrders } from '@/lib/admin-api';
 import { useAdminLocal } from '@/lib/admin-store';
 import { cn } from '@/lib/cn';
 import { useIsDesktop, useNow } from '@/lib/hooks';
+import { spring } from '@/lib/motion';
 import { countdown, relativeTime, todayKey } from '@/lib/time';
 import { OnboardingChecklist } from './onboarding';
 import { PrimaryActionButton } from './order-actions';
@@ -172,15 +174,26 @@ export function OrdersView() {
             <BowlLoader label="Memuat pesanan…" />
           ) : data && data.orders.length > 0 ? (
             <div className="flex flex-col gap-3">
-              {data.orders.map((order) => (
-                <OrderCard
-                  key={order.id}
-                  order={order}
-                  now={now}
-                  selected={isDesktop && selectedId === order.id}
-                  onOpen={() => open(order.id)}
-                />
-              ))}
+              {/* Pesanan baru meluncur masuk, kartu yang pindah tab menyusut keluar. */}
+              <AnimatePresence initial={false} mode="popLayout">
+                {data.orders.map((order) => (
+                  <motion.div
+                    key={order.id}
+                    layout
+                    initial={{ opacity: 0, y: -24, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 60, scale: 0.95 }}
+                    transition={spring.smooth}
+                  >
+                    <OrderCard
+                      order={order}
+                      now={now}
+                      selected={isDesktop && selectedId === order.id}
+                      onOpen={() => open(order.id)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           ) : (
             <EmptyState

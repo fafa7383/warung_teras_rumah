@@ -1,3 +1,5 @@
+'use client';
+
 import {
   FINAL_ORDER_STATUSES,
   ORDER_STATUS_LABELS,
@@ -11,8 +13,10 @@ import {
   type OrderType,
   type PaymentMethod,
 } from '@wtr/shared';
+import { motion } from 'motion/react';
 import { Check } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
+import { spring } from '@/lib/motion';
 
 /**
  * Stepper vertikal sesuai alur (PRD Bagian 7). Langkah selesai bertanda centang + jam.
@@ -49,14 +53,32 @@ export function StatusTimeline({
         const time = timeOf.get(step.status);
         const last = index === steps.length - 1;
         return (
-          <li key={step.status} className="relative flex gap-3 pb-5 last:pb-0">
+          <motion.li
+            key={step.status}
+            className="relative flex gap-3 pb-5 last:pb-0"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ ...spring.gentle, delay: 0.1 + index * 0.08 }}
+          >
             {!last && (
               <span
-                className={cn('absolute top-7 left-[13px] h-[calc(100%-24px)] w-0.5 rounded-full', step.state === 'done' ? 'bg-green' : 'bg-fill-2')}
+                className="absolute top-7 left-[13px] h-[calc(100%-24px)] w-0.5 overflow-hidden rounded-full bg-fill-2"
                 aria-hidden="true"
-              />
+              >
+                {/* Garis hijau terisi dari atas ke bawah, berurutan per langkah. */}
+                <motion.span
+                  className="block size-full origin-top rounded-full bg-green"
+                  initial={{ scaleY: 0 }}
+                  animate={{ scaleY: step.state === 'done' ? 1 : 0 }}
+                  transition={{ duration: 0.55, ease: 'easeInOut', delay: 0.25 + index * 0.18 }}
+                />
+              </span>
             )}
-            <span
+            <motion.span
+              key={step.state}
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              transition={{ ...spring.bouncy, delay: 0.15 + index * 0.18 }}
               className={cn(
                 'relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full',
                 step.state === 'done' && 'bg-green text-white',
@@ -71,7 +93,7 @@ export function StatusTimeline({
               ) : (
                 <span className={cn('size-2 rounded-full bg-current', step.state === 'current' && 'animate-pulse-dot bg-white')} />
               )}
-            </span>
+            </motion.span>
             <div className="flex min-w-0 flex-1 items-baseline justify-between gap-2 pt-0.5">
               <span className={cn('text-subhead', step.state === 'upcoming' ? 'text-label-2' : 'font-semibold text-label')}>
                 {ORDER_STATUS_LABELS[step.status]}
@@ -80,7 +102,7 @@ export function StatusTimeline({
                 <span className="text-footnote text-label-2 tabular-nums">{formatTimeWIB(time)}</span>
               )}
             </div>
-          </li>
+          </motion.li>
         );
       })}
     </ol>

@@ -2,7 +2,8 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import { env, isProduction } from './env';
+import { isProduction } from './env';
+import { isAllowedOrigin } from './lib/origins';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { adminRouter } from './routes/admin';
 import { healthRouter } from './routes/health';
@@ -16,7 +17,13 @@ export function createApp() {
 
   // Web & API berada di site yang sama (warungterasrumah.com / api.warungterasrumah.com).
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-site' } }));
-  app.use(cors({ origin: env.WEB_ORIGIN, credentials: true }));
+  app.use(
+    cors({
+      // Request tanpa Origin (mis. health check, server-side fetch Next.js) tidak dibatasi CORS.
+      origin: (origin, callback) => callback(null, !origin || isAllowedOrigin(origin)),
+      credentials: true,
+    }),
+  );
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
 
