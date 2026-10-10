@@ -1,12 +1,17 @@
 'use client';
 
-import { formatRupiah, getDefaultOptionIds, getMenuPriceDisplay, type MenuItemDto } from '@wtr/shared';
+import {
+  formatRupiah,
+  getDefaultOptionIds,
+  getMenuPriceDisplay,
+  type MenuItemDto,
+} from '@wtr/shared';
 import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { RollingNumber } from '@/components/motion/animated-number';
-import { Check, Flame, Plus, Star } from '@/components/ui/icons';
+import { Check, Plus } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
 import { riseOrder, spring } from '@/lib/motion';
 import { toast } from '@/lib/toast-store';
@@ -29,13 +34,22 @@ export function menuHref(slug: string) {
   return `/menu/${slug}`;
 }
 
-export function MenuCard({ item, variant = 'grid', quantityInCart = 0, rank, riseIndex, priority }: MenuCardProps) {
+export function MenuCard({
+  item,
+  variant = 'grid',
+  quantityInCart = 0,
+  rank,
+  riseIndex,
+  priority,
+}: MenuCardProps) {
   const router = useRouter();
   const addToCart = useAddToCart();
   const plusRef = useRef<HTMLButtonElement>(null);
   const [justAdded, setJustAdded] = useState(false);
   const { price, isStartingPrice } = getMenuPriceDisplay(item);
-  const needsOptions = item.optionGroups.some((group) => group.isRequired && group.options.length > 0);
+  const needsOptions = item.optionGroups.some(
+    (group) => group.isRequired && group.options.length > 0,
+  );
   const soldOut = !item.isAvailable;
   const href = menuHref(item.slug);
 
@@ -54,22 +68,30 @@ export function MenuCard({ item, variant = 'grid', quantityInCart = 0, rank, ris
       router.push(href, { scroll: false });
       return;
     }
-    if (addToCart(item, getDefaultOptionIds(item), 1, { source: plusRef.current })) setJustAdded(true);
+    if (addToCart(item, getDefaultOptionIds(item), 1, { source: plusRef.current }))
+      setJustAdded(true);
   };
 
   return (
     // Animasi masuk (CSS) di pembungkus, efek tekan (Motion) di kartu, agar tidak saling menimpa.
     <div
-      className={cn(riseIndex === undefined ? 'reveal' : 'animate-rise', variant === 'compact' && 'w-[148px] shrink-0 snap-start')}
+      className={cn(
+        riseIndex === undefined ? 'reveal' : 'animate-rise',
+        variant === 'compact' && 'w-[148px] shrink-0 snap-start',
+      )}
       style={riseIndex === undefined ? undefined : riseOrder(riseIndex)}
     >
       <motion.article
         whileTap={{ scale: 0.975 }}
-        whileHover={{ y: -3 }}
         transition={spring.snappy}
-        className="group relative flex h-full flex-col rounded-card bg-surface shadow-card transition-shadow duration-300 hover:shadow-float"
+        className="group relative flex h-full flex-col rounded-card bg-surface shadow-card"
       >
-        <Link href={href} scroll={false} className="absolute inset-0 z-0 rounded-card" aria-label={`Lihat detail ${item.name}`} />
+        <Link
+          href={href}
+          scroll={false}
+          className="absolute inset-0 z-0 rounded-card"
+          aria-label={`Lihat detail ${item.name}`}
+        />
         <div className="pointer-events-none relative m-1.5 mb-0 aspect-square overflow-hidden rounded-tile">
           <div className="size-full transition-transform duration-500 ease-out group-hover:scale-105">
             <MenuImage
@@ -83,21 +105,11 @@ export function MenuCard({ item, variant = 'grid', quantityInCart = 0, rank, ris
           </div>
           <div className="absolute top-1.5 left-1.5 flex flex-col items-start gap-1">
             {rank === 1 ? (
-              <Badge className="bg-yellow text-label">
-                <Star size={12} fill="currentColor" aria-hidden="true" /> #1 Terlaris
-              </Badge>
+              <Badge>Terlaris No. 1</Badge>
             ) : (
-              item.isBestSeller && (
-                <Badge className="bg-yellow text-label">
-                  <Star size={12} fill="currentColor" aria-hidden="true" /> Terlaris
-                </Badge>
-              )
+              item.isBestSeller && <Badge>Terlaris</Badge>
             )}
-            {item.isSpicy && variant === 'grid' && (
-              <Badge className="bg-white/90 text-red-text">
-                <Flame size={12} fill="currentColor" aria-hidden="true" /> Pedas
-              </Badge>
-            )}
+            {item.isSpicy && variant === 'grid' && <Badge tone="spicy">Pedas</Badge>}
           </div>
           <AnimatePresence>
             {quantityInCart > 0 && (
@@ -121,13 +133,17 @@ export function MenuCard({ item, variant = 'grid', quantityInCart = 0, rank, ris
           )}
         </div>
         <div className="pointer-events-none flex flex-1 flex-col px-3 pt-2 pb-3">
-          <h3 className={cn('line-clamp-2 text-subhead font-semibold', soldOut && 'text-label-2')}>{item.name}</h3>
+          <h3 className={cn('line-clamp-2 text-subhead font-semibold', soldOut && 'text-label-2')}>
+            {item.name}
+          </h3>
           {variant === 'grid' && item.description && (
             <p className="line-clamp-1 text-footnote text-label-2">{item.description}</p>
           )}
           <div className="mt-auto flex items-end justify-between gap-2 pt-2">
             <p className={cn('text-subhead font-bold', soldOut ? 'text-label-2' : 'text-tint')}>
-              {isStartingPrice && <span className="block text-caption font-medium text-label-2">mulai</span>}
+              {isStartingPrice && (
+                <span className="block text-caption font-medium text-label-2">mulai</span>
+              )}
               {formatRupiah(price)}
             </p>
             <motion.button
@@ -138,12 +154,16 @@ export function MenuCard({ item, variant = 'grid', quantityInCart = 0, rank, ris
               aria-disabled={soldOut || undefined}
               whileTap={soldOut ? undefined : { scale: 0.8 }}
               animate={{
-                backgroundColor: soldOut ? 'rgba(118,118,128,0.12)' : justAdded ? '#248A3D' : '#D63C3C',
+                backgroundColor: soldOut
+                  ? 'rgba(118,118,128,0.12)'
+                  : justAdded
+                    ? '#248A3D'
+                    : '#D63C3C',
               }}
               transition={spring.snappy}
               className={cn(
                 'pointer-events-auto relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full',
-                soldOut ? 'text-label-3' : 'text-white shadow-[0_4px_12px_rgb(214_60_60/0.3)]',
+                soldOut ? 'text-label-3' : 'text-white',
               )}
             >
               <AnimatePresence mode="popLayout" initial={false}>
@@ -170,12 +190,19 @@ export function MenuCard({ item, variant = 'grid', quantityInCart = 0, rank, ris
   );
 }
 
-function Badge({ children, className }: { children: ReactNode; className?: string }) {
+/** Label kecil ala iOS: kapsul putih buram bergaris tipis, teks saja. */
+function Badge({
+  children,
+  tone = 'neutral',
+}: {
+  children: ReactNode;
+  tone?: 'neutral' | 'spicy';
+}) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-caption font-semibold shadow-[0_1px_3px_rgb(0_0_0/0.12)]',
-        className,
+        'inline-flex items-center rounded-full bg-white/90 px-2 py-0.5 text-caption font-semibold ring-1 ring-black/[0.06] backdrop-blur-sm',
+        tone === 'spicy' ? 'text-red-text' : 'text-label',
       )}
     >
       {children}

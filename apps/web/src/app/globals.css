@@ -21,8 +21,9 @@
   --color-label-2: #6e6e73;
   --color-label-3: #aeaeb2;
 
-  /* Garis & isian */
+  /* Garis & isian. stroke = garis tepi kartu: abu sangat muda, hampir putih (gaya iOS). */
   --color-separator: rgb(60 60 67 / 0.18);
+  --color-stroke: #e6e6eb;
   --color-fill: rgb(118 118 128 / 0.12);
   --color-fill-2: rgb(120 120 128 / 0.2);
 
@@ -81,8 +82,9 @@
   --radius-card: 20px;
   --radius-sheet: 28px;
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 6px 20px rgb(0 0 0 / 0.06);
-  --shadow-float: 0 10px 30px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.06);
+  /* Kartu ala iOS: garis tepi tipis + bayangan nyaris tak terlihat, bukan bayangan tebal. */
+  --shadow-card: 0 0 0 1px var(--color-stroke), 0 1px 2px rgb(0 0 0 / 0.03);
+  --shadow-float: 0 8px 24px rgb(0 0 0 / 0.1), 0 0 0 1px rgb(0 0 0 / 0.04);
 
   /* Kurva gerak: iOS (sheet), standar, dan splash (PRD 5.3) */
   --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
@@ -172,6 +174,8 @@
     color-scheme: light;
     -webkit-text-size-adjust: 100%;
     background-color: var(--color-canvas);
+    /* Ruang scrollbar tetap ada, jadi halaman tidak bergeser saat scroll dikunci (splash). */
+    scrollbar-gutter: stable;
   }
 
   body {
@@ -296,23 +300,147 @@
   }
 }
 
-/* Splash (PRD 5): disembunyikan sebelum paint bila sudah tampil di sesi ini (lihat layout.tsx). */
+/* ------------------------------------------------------------------------------------------
+ * Splash Home (PRD 5): bukan layar terpisah. Lapisan polos dengan "jendela" memperlihatkan
+ * header Home (langit + warung) di baliknya; saat siap jendela melebar dan Home menyambung.
+ * html[data-splash]: running → leaving → done, dipasang sebelum paint (layout.tsx) dan
+ * diubah oleh home-splash.tsx. Hanya untuk "/", tampil setiap kali Home dibuka atau di-refresh.
+ * ---------------------------------------------------------------------------------------- */
+
 html[data-splash='done'] .splash-screen {
   display: none;
 }
 
-html[data-splash='running'] .shop-content {
-  opacity: 0;
-  transform: translateY(12px);
+/* Halaman tidak ikut ter-scroll di balik splash. */
+html[data-splash='running'],
+html[data-splash='leaving'] {
+  overflow: hidden;
 }
 
-/* Home masuk dari bawah 12 px bersamaan dengan splash memudar. */
-html[data-splash='leaving'] .shop-content {
-  opacity: 1;
-  transform: none;
+/* Di HP, langit header memanjang setinggi layar selama splash agar jendela di tengah layar
+   tetap berisi langit; setelah selesai kembali setinggi header (pola awan tetap sama, lihat
+   sceneHeight di sky-canvas.tsx). */
+@media (width < 64rem) {
+  html:not([data-splash='done']) .hero-sky {
+    height: 100vh;
+    height: 100lvh;
+  }
+}
+
+/* Saat jendela melebar, langit sedikit "mundur" (zoom out halus) agar terasa seperti kamera. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-splash='running'] .hero-sky {
+    transform: scale(1.06);
+  }
+
+  html[data-splash='leaving'] .hero-sky {
+    transition: transform 1.6s var(--ease-splash);
+  }
+}
+
+/* Wadah konten menunggu di bawah layar, lalu naik menutupi warung. */
+html[data-splash='running'] .home-sheet {
+  transform: translateY(100vh);
+  transform: translateY(var(--splash-sheet-offset, 100lvh));
+}
+
+html[data-splash='leaving'] .home-sheet {
+  transition: transform 1.6s var(--ease-splash);
+}
+
+/* Isi header (sapaan, kolom cari) muncul setelah jendela mulai terbuka. Selain animasi masuk,
+   disembunyikan langsung agar tetap tersembunyi saat animasi dikurangi. */
+html[data-splash='running'] .hero-content {
+  opacity: 0;
+}
+
+html[data-splash='leaving'] .hero-content {
+  /* Muncul saat logo hampir mendarat, agar logo tidak melintas di atas teks. */
+  transition: opacity 700ms var(--ease-splash) 1s;
+}
+
+/* Logo header disembunyikan sampai logo splash mendarat tepat di posisinya. */
+html:not([data-splash='done']) [data-brand-target] {
+  visibility: hidden;
+}
+
+/* Pemandangan warung hanya ada selama splash. */
+.splash-scenery {
+  display: none;
+}
+
+html[data-splash='running'] .splash-scenery,
+html[data-splash='leaving'] .splash-scenery {
+  display: block;
+}
+
+html[data-splash='leaving'] .splash-scenery {
+  opacity: 0;
+  transform: translateY(28px);
   transition:
-    opacity 300ms var(--ease-standard),
-    transform 300ms var(--ease-standard);
+    opacity 900ms var(--ease-splash) 400ms,
+    transform 1.2s var(--ease-splash) 400ms;
+}
+
+/* Siluet mengikuti suasana: biru gelap (pagi), ungu gelap (sore), hampir hitam (malam). */
+.splash-scenery {
+  color: #1f2d45;
+}
+
+html[data-daypart='afternoon'] .splash-scenery {
+  color: #2d2135;
+}
+
+html[data-daypart='night'] .splash-scenery {
+  color: #070a14;
+}
+
+/* Jendela, etalase gerobak & bohlam: pantulan tipis di siang hari, menyala hangat di malam hari
+   (padam bila warung tutup). */
+.scenery-light {
+  fill: rgb(255 255 255 / 0.1);
+}
+
+.scenery-glow {
+  opacity: 0;
+}
+
+html[data-daypart='night'] [data-open='true'] .scenery-light {
+  fill: #ffd27a;
+}
+
+html[data-daypart='night'] [data-open='true'] .scenery-glow {
+  opacity: 1;
+}
+
+.scenery-steam {
+  animation: scenery-steam 2.4s ease-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.6s);
+}
+
+@keyframes scenery-steam {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  35% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Bagian berlatar beda warna: tepi atas & bawahnya memudar agar tidak terlihat "patah". */
+@utility section-wash {
+  background-image: linear-gradient(
+    180deg,
+    transparent 0,
+    rgb(253 236 235 / 0.7) 56px,
+    rgb(253 236 235 / 0.7) calc(100% - 56px),
+    transparent 100%
+  );
 }
 
 /* ------------------------------------------------------------------------------------------
@@ -572,7 +700,8 @@ html[data-daypart='night'] .sky-fallback {
 .hero-shooting-star {
   position: absolute;
   top: 0;
-  left: 0;
+  /* Membentang ke kiri dari titik awal agar tidak membuat halaman melebar ke kanan. */
+  right: 0;
   width: 110px;
   height: 1.5px;
   border-radius: 999px;
@@ -619,5 +748,15 @@ html[data-daypart='night'] .sky-fallback {
   .hero-bird,
   .hero-shooting-star {
     display: none;
+  }
+
+  html[data-splash='leaving'] .home-sheet,
+  html[data-splash='leaving'] .splash-scenery {
+    transition: none;
+  }
+
+  .scenery-steam {
+    animation: none;
+    opacity: 0.4;
   }
 }

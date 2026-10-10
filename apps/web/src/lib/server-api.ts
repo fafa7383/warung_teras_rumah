@@ -2,7 +2,7 @@
 import type { HomeResponse, MenuResponse, StoreDto } from '@wtr/shared';
 import { publicEnv } from './env';
 
-// Di server boleh memakai URL internal (mis. jaringan privat Railway) bila diisi.
+// Di server memakai API_URL_INTERNAL bila diisi (produksi: alamat API di Render).
 const baseUrl = (process.env.API_URL_INTERNAL ?? publicEnv.apiUrl).replace(/\/+$/, '');
 
 /** Data publik di-cache 10 detik: perubahan stok terlihat pembeli ≤ 10 detik (PRD A-06). */

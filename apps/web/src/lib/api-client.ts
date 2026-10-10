@@ -26,10 +26,12 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     headers.set('Content-Type', 'application/json');
   }
 
+  // Request admin lewat domain web (cookie sesi first-party), selain itu langsung ke API.
+  const baseUrl = path.startsWith('/api/admin') ? publicEnv.adminApiUrl : publicEnv.apiUrl;
   let response: Response;
   try {
-    // credentials: 'include' agar cookie sesi admin ikut terkirim ke api.warungterasrumah.com.
-    response = await fetch(`${publicEnv.apiUrl}${path}`, { ...init, headers, credentials: 'include' });
+    // credentials: 'include' agar cookie sesi admin ikut terkirim.
+    response = await fetch(`${baseUrl}${path}`, { ...init, headers, credentials: 'include' });
   } catch {
     throw new ApiError(0, 'NETWORK_ERROR', 'Koneksinya lagi bermasalah, coba lagi ya');
   }

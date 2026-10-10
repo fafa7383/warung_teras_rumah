@@ -223,7 +223,7 @@ export function CartMiniBar() {
           >
             <Link
               href="/keranjang"
-              className="flex h-14 w-full tap-scale items-center gap-3 rounded-full bg-tint pr-2 pl-5 text-white shadow-[0_10px_30px_rgb(214_60_60/0.35)]"
+              className="flex h-14 w-full tap-scale items-center gap-3 rounded-full bg-tint pr-2 pl-5 text-white shadow-[0_6px_18px_rgb(0_0_0/0.14)]"
             >
               <ShoppingBag size={20} aria-hidden="true" />
               <span className="flex flex-1 items-center gap-1 text-left text-subhead font-semibold">

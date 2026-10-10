@@ -22,6 +22,8 @@ const envSchema = z.object({
     )
     .pipe(z.array(z.url()).min(1)),
   COOKIE_DOMAIN: optionalString,
+  /** Jumlah proxy di depan API yang dipercaya untuk membaca IP asli pembeli (produksi). */
+  TRUST_PROXY_HOPS: z.preprocess(emptyToUndefined, z.coerce.number().int().min(0).default(1)),
 
   DATABASE_URL: z.url(),
 
@@ -44,13 +46,17 @@ const envSchema = z.object({
 });
 
 // Saat development, PORT sering diisi alat lain untuk server web (mis. Next.js di 3000),
-// jadi API memakai API_PORT. Di produksi (Railway) PORT diisi platform dan wajib dipakai.
+// jadi API memakai API_PORT. Di produksi (Render) PORT diisi platform dan wajib dipakai.
 const port =
-  process.env.NODE_ENV === 'production' ? (process.env.PORT ?? process.env.API_PORT) : process.env.API_PORT;
+  process.env.NODE_ENV === 'production'
+    ? (process.env.PORT ?? process.env.API_PORT)
+    : process.env.API_PORT;
 
 const parsed = envSchema.safeParse({ ...process.env, PORT: port });
 if (!parsed.success) {
-  console.error(`✗ Environment variable di apps/api/.env belum benar:\n${z.prettifyError(parsed.error)}`);
+  console.error(
+    `✗ Environment variable di apps/api/.env belum benar:\n${z.prettifyError(parsed.error)}`,
+  );
   process.exit(1);
 }
 

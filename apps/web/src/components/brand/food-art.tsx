@@ -6,24 +6,13 @@ export type BowlVariant = 'bakso' | 'mie-ayam' | 'seblak' | 'jajanan';
 
 const BRAND = '#E14B4B';
 
-/** Bayangan, bibir mangkok merah bermotif garis putih, dan dinding dalam. */
+/** Mangkok keramik putih polos: bibir bergaris abu tipis, dinding dalam hangat, bayangan lembut. */
 export function BowlRim() {
   return (
     <g>
-      <circle cx="100" cy="105" r="92" fill="rgb(0 0 0 / 0.07)" />
-      <circle cx="100" cy="100" r="86" fill="#fff" stroke={BRAND} strokeWidth="12" />
-      <circle
-        cx="100"
-        cy="100"
-        r="86"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="2.4"
-        strokeDasharray="5 9"
-        strokeLinecap="round"
-        opacity="0.9"
-      />
-      <circle cx="100" cy="100" r="78" fill="#FBF7F2" />
+      <circle cx="100" cy="103" r="91" fill="rgb(0 0 0 / 0.05)" />
+      <circle cx="100" cy="100" r="88" fill="#fff" stroke="#E4E1DC" strokeWidth="2" />
+      <circle cx="100" cy="100" r="78" fill="#F7F3EE" />
     </g>
   );
 }
@@ -32,7 +21,16 @@ export function BowlRim() {
 export function Spoon() {
   return (
     <g transform="rotate(38 100 100)">
-      <rect x="93" y="2" width="14" height="48" rx="7" fill="#fff" stroke="#E6DDD4" strokeWidth="2" />
+      <rect
+        x="93"
+        y="2"
+        width="14"
+        height="48"
+        rx="7"
+        fill="#fff"
+        stroke="#E6DDD4"
+        strokeWidth="2"
+      />
       <ellipse cx="100" cy="58" rx="16" ry="19" fill="#fff" stroke="#E6DDD4" strokeWidth="2" />
       <ellipse cx="100" cy="60" rx="10" ry="12" fill="#F4EFE9" />
     </g>
@@ -66,7 +64,15 @@ function Bakso() {
         </g>
       ))}
       {scallions.map(([x, y]) => (
-        <circle key={`${x}-${y}`} cx={x} cy={y} r="3.2" fill="none" stroke="#56B65C" strokeWidth="2.2" />
+        <circle
+          key={`${x}-${y}`}
+          cx={x}
+          cy={y}
+          r="3.2"
+          fill="none"
+          stroke="#56B65C"
+          strokeWidth="2.2"
+        />
       ))}
       {[
         [70, 80],
@@ -98,7 +104,16 @@ function MieAyam() {
         [94, 106, 8],
         [118, 110, -30],
       ].map(([x = 0, y = 0, r = 0]) => (
-        <rect key={`${x}-${y}`} x={x - 7} y={y - 6} width="15" height="12" rx="3" fill="#9A6233" transform={`rotate(${r} ${x} ${y})`} />
+        <rect
+          key={`${x}-${y}`}
+          x={x - 7}
+          y={y - 6}
+          width="15"
+          height="12"
+          rx="3"
+          fill="#9A6233"
+          transform={`rotate(${r} ${x} ${y})`}
+        />
       ))}
       <g transform="rotate(-30 128 124)">
         <ellipse cx="128" cy="124" rx="18" ry="8" fill="#5FB45A" />
@@ -180,7 +195,16 @@ function Jajanan() {
       ))}
       {otak.map(([x, y, r]) => (
         <g key={`o${x}`} transform={`rotate(${r} ${x} ${y})`}>
-          <rect x={x - 21} y={y - 7} width="42" height="14" rx="7" fill="#E5CBA4" stroke="#B9946A" strokeWidth="1.5" />
+          <rect
+            x={x - 21}
+            y={y - 7}
+            width="42"
+            height="14"
+            rx="7"
+            fill="#E5CBA4"
+            stroke="#B9946A"
+            strokeWidth="1.5"
+          />
           <path
             d={`M${x - 12} ${y - 5}v10M${x - 4} ${y - 5}v10M${x + 4} ${y - 5}v10M${x + 12} ${y - 5}v10`}
             stroke="#B9946A"
@@ -240,8 +264,21 @@ export function DrinkArt({ size, className }: { size?: number; className?: strin
   return (
     <svg viewBox="0 0 200 200" width={size} height={size} className={className} aria-hidden="true">
       <ellipse cx="100" cy="178" rx="46" ry="8" fill="rgb(0 0 0 / 0.07)" />
-      <rect x="110" y="10" width="10" height="112" rx="5" fill={BRAND} transform="rotate(14 115 66)" />
-      <path d="M56 44h88l-10 124q-1 8-9 8H75q-8 0-9-8z" fill="#fff" stroke="#E6DDD4" strokeWidth="3" />
+      <rect
+        x="110"
+        y="10"
+        width="10"
+        height="112"
+        rx="5"
+        fill={BRAND}
+        transform="rotate(14 115 66)"
+      />
+      <path
+        d="M56 44h88l-10 124q-1 8-9 8H75q-8 0-9-8z"
+        fill="#fff"
+        stroke="#E6DDD4"
+        strokeWidth="3"
+      />
       <path d="M62 76h76l-8 90q-1 4-5 4H75q-4 0-5-4z" fill="#F0A238" />
       <path d="M62 76h76l-1 10H63z" fill="#F7C46E" />
       <g fill="#fff" opacity="0.75" stroke="#fff" strokeWidth="1">
@@ -250,7 +287,11 @@ export function DrinkArt({ size, className }: { size?: number; className?: strin
         <rect x="82" y="118" width="20" height="18" rx="5" transform="rotate(4 92 127)" />
       </g>
       <circle cx="140" cy="50" r="17" fill="#F7E07A" stroke="#E9C63B" strokeWidth="3" />
-      <path d="M140 36v28M126 50h28M130 40l20 20M150 40l-20 20" stroke="#E9C63B" strokeWidth="1.6" />
+      <path
+        d="M140 36v28M126 50h28M130 40l20 20M150 40l-20 20"
+        stroke="#E9C63B"
+        strokeWidth="1.6"
+      />
     </svg>
   );
 }
@@ -258,7 +299,15 @@ export function DrinkArt({ size, className }: { size?: number; className?: strin
 const BOWL_KINDS = new Set<string>(['bakso', 'mie-ayam', 'seblak', 'jajanan']);
 
 /** Ilustrasi berdasarkan kunci ikon kategori; dipakai di tile kategori & placeholder foto menu. */
-export function FoodArt({ kind, size, className }: { kind: string; size?: number; className?: string }) {
+export function FoodArt({
+  kind,
+  size,
+  className,
+}: {
+  kind: string;
+  size?: number;
+  className?: string;
+}) {
   if (kind === 'minuman') return <DrinkArt size={size} className={className} />;
   const variant = (BOWL_KINDS.has(kind) ? kind : 'bakso') as BowlVariant;
   return <BowlArt variant={variant} size={size} spoon={false} className={className} />;

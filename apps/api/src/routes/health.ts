@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma';
 
 export const healthRouter = Router();
 
-// Dipakai health check Railway dan untuk memastikan koneksi database saat setup.
+// Dipakai health check hosting (Render), ping penjaga agar API tidak tidur, dan cek database.
 healthRouter.get('/', async (_req, res) => {
   let database: 'ok' | 'error' = 'ok';
   try {

@@ -1,5 +1,8 @@
 // Variabel NEXT_PUBLIC_* ditanam saat build, jadi harus diakses dengan nama lengkap.
-const configuredApiUrl = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000').replace(/\/+$/, '');
+const configuredApiUrl = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000').replace(
+  /\/+$/,
+  '',
+);
 
 /**
  * Saat development, website bisa dibuka dari HP lewat WiFi (mis. http://192.168.1.20:3000).
@@ -23,5 +26,10 @@ function resolveApiUrl(): string {
 
 export const publicEnv = {
   apiUrl: resolveApiUrl(),
+  /**
+   * API admin. Produksi: path relatif ("") karena /api/admin diteruskan oleh server web ke API
+   * (next.config.ts), agar cookie login admin tidak dianggap cookie pihak ketiga.
+   */
+  adminApiUrl: process.env.NEXT_PUBLIC_ADMIN_API_PROXY === '1' ? '' : resolveApiUrl(),
   turnstileSiteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '',
 };

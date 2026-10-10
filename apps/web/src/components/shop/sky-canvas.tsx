@@ -24,6 +24,9 @@ precision mediump float;
 #endif
 
 uniform vec2 uResolution;
+// Tinggi adegan (piksel kanvas) yang dipetakan ke uv.y 1 → 0, dihitung dari tepi atas.
+// Kanvas yang lebih tinggi hanya menambah bagian di bawah cakrawala; bagian atas tidak berubah.
+uniform float uSceneHeight;
 uniform float uTime;
 uniform vec3 uTop;
 uniform vec3 uHorizon;
@@ -75,12 +78,13 @@ float coverage(float field) {
 }
 
 void main() {
-  vec2 uv = gl_FragCoord.xy / uResolution;
-  float aspect = uResolution.x / uResolution.y;
+  float fromTop = uResolution.y - gl_FragCoord.y;
+  vec2 uv = vec2(gl_FragCoord.x / uResolution.x, 1.0 - fromTop / uSceneHeight);
+  float aspect = uResolution.x / uSceneHeight;
   vec2 scale = vec2(aspect, 1.0);
 
   // Gradasi langit: horizon di bawah, zenit di atas.
-  vec3 sky = mix(uHorizon, uTop, smoothstep(0.0, 1.0, pow(uv.y, 0.85)));
+  vec3 sky = mix(uHorizon, uTop, smoothstep(0.0, 1.0, pow(max(uv.y, 0.0), 0.85)));
 
   // Matahari: pendar lebar, inti terang, sinar tipis yang berputar sangat pelan.
   vec2 toSun = (uv - uSun) * scale;
@@ -114,7 +118,7 @@ void main() {
 
   // Awan: perspektif lembut (makin rapat ke horizon), dibengkokkan noise lain agar bentuknya
   // berserat seperti awan sungguhan, dan terus bergeser ditiup angin.
-  float depth = 1.0 / (uv.y * 0.85 + 0.38);
+  float depth = 1.0 / (max(uv.y, -0.12) * 0.85 + 0.38);
   vec2 p = vec2((uv.x - 0.5) * aspect * depth * 1.05, depth * 1.7);
   float t = uTime;
   vec2 warp = vec2(
@@ -139,8 +143,10 @@ void main() {
   vec3 color = mix(sky, cloud, density * 0.94);
   // Cahaya matahari tetap menembus awan tipis.
   color += uLight * uSunAmount * exp(-sunDist * 6.0) * 0.15 * (1.0 - density * 0.5);
-  // Kabut tipis di dekat horizon memberi kesan jauh.
-  color = mix(color, uHorizon, smoothstep(0.32, 0.0, uv.y) * 0.3);
+  // Kabut tipis di dekat horizon memberi kesan jauh; di bawah cakrawala (hanya terlihat saat
+  // splash) makin tebal, seperti udara berkabut di kejauhan.
+  float haze = smoothstep(0.32, 0.0, uv.y) * 0.3 + smoothstep(0.0, -0.3, uv.y) * 0.6;
+  color = mix(color, uHorizon, haze);
   // Dither halus agar gradasi tidak bergaris di layar HP.
   color += (hash(gl_FragCoord.xy + fract(uTime) * 61.0) - 0.5) / 255.0 * 1.5;
 
@@ -185,15 +191,34 @@ function createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
   return program;
 }
 
-/** `paused`: berhenti menggambar, mis. saat header sudah tertutup penuh oleh konten. */
-export function SkyCanvas({ className, paused = false }: { className?: string; paused?: boolean }) {
+/**
+ * `paused`: berhenti menggambar, mis. saat header sudah tertutup penuh oleh konten.
+ * `sceneHeight` (px CSS): tinggi yang dipetakan ke langit penuh, diukur dari tepi atas. Bila
+ * kanvas lebih tinggi (splash), sisanya jadi kabut cakrawala tanpa mengubah bagian atas.
+ */
+export function SkyCanvas({
+  className,
+  paused = false,
+  sceneHeight,
+}: {
+  className?: string;
+  paused?: boolean;
+  sceneHeight?: number;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pausedRef = useRef(paused);
+  const sceneHeightRef = useRef(sceneHeight);
+  const drawRef = useRef<((now: number) => void) | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     pausedRef.current = paused;
   }, [paused]);
+
+  useEffect(() => {
+    sceneHeightRef.current = sceneHeight;
+    drawRef.current?.(performance.now());
+  }, [sceneHeight]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -221,6 +246,7 @@ export function SkyCanvas({ className, paused = false }: { className?: string; p
     const uniform = (name: string) => gl.getUniformLocation(program, name);
     const u = {
       resolution: uniform('uResolution'),
+      sceneHeight: uniform('uSceneHeight'),
       time: uniform('uTime'),
       top: uniform('uTop'),
       horizon: uniform('uHorizon'),
@@ -250,7 +276,10 @@ export function SkyCanvas({ className, paused = false }: { className?: string; p
     const draw = (now: number) => {
       if (lost) return;
       const sky = skyAt(currentWibHour());
+      const cssHeight = Math.max(1, canvas.clientHeight);
+      const sceneCss = sceneHeightRef.current ?? cssHeight;
       gl.uniform2f(u.resolution, canvas.width, canvas.height);
+      gl.uniform1f(u.sceneHeight, sceneCss * (canvas.height / cssHeight));
       // Dibatasi agar presisi float di GPU HP tetap cukup walau halaman terbuka lama.
       gl.uniform1f(u.time, (timeOffset + (now - start) / 1000) % 3600);
       gl.uniform3f(u.top, ...sky.top);
@@ -308,6 +337,7 @@ export function SkyCanvas({ className, paused = false }: { className?: string; p
     };
     canvas.addEventListener('webglcontextlost', onContextLost);
 
+    drawRef.current = draw;
     resize();
     draw(performance.now());
     let staticTimer: ReturnType<typeof setInterval> | undefined;
@@ -318,6 +348,7 @@ export function SkyCanvas({ className, paused = false }: { className?: string; p
     }
 
     return () => {
+      drawRef.current = null;
       cancelAnimationFrame(frame);
       clearInterval(staticTimer);
       resizeObserver.disconnect();

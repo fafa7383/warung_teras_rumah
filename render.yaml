@@ -1,0 +1,52 @@
+# Blueprint Render untuk API (Express) — paket gratis.
+# Dashboard Render: New → Blueprint → pilih repo ini. Variabel bertanda `sync: false` diisi
+# sendiri di dashboard; nilainya sama dengan apps/api/.env di laptop, kecuali WEB_ORIGIN
+# (alamat web di Netlify, mis. https://warung-teras-rumah.netlify.app).
+#
+# Catatan paket gratis: layanan tidur setelah 15 menit tanpa request dan butuh ±1 menit untuk
+# bangun. Ping /health tiap 10 menit selama jam buka agar tetap siap.
+services:
+  - type: web
+    name: warung-teras-rumah-api
+    runtime: node
+    plan: free
+    region: singapore
+    # pnpm lewat npx agar versinya sama dengan packageManager di package.json. Hanya API dan
+    # dependensinya yang dipasang. Migrasi database dijalankan setiap deploy.
+    buildCommand: >-
+      npx --yes pnpm@12.9.1 install --frozen-lockfile --filter "@wtr/api..." &&
+      npx --yes pnpm@12.9.1 --filter @wtr/api build &&
+      cd apps/api && npx prisma migrate deploy
+    # NODE_ENV hanya untuk runtime: bila diset saat build, devDependencies (tsup, prisma) tidak
+    # ikut terpasang dan build gagal.
+    startCommand: cd apps/api && NODE_ENV=production node --enable-source-maps dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: TRUST_PROXY_HOPS
+        value: '1'
+      - key: STORAGE_PUBLIC_BUCKET
+        value: public-assets
+      - key: STORAGE_PRIVATE_BUCKET
+        value: payment-proofs
+      - key: WEB_ORIGIN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false

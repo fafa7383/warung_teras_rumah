@@ -17,7 +17,9 @@ export function useAdminEvents() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const source = new EventSource(`${publicEnv.apiUrl}/api/admin/events`, { withCredentials: true });
+    const source = new EventSource(`${publicEnv.adminApiUrl}/api/admin/events`, {
+      withCredentials: true,
+    });
 
     const handle = (raw: MessageEvent<string>) => {
       let event: AdminEvent;
@@ -30,7 +32,9 @@ export function useAdminEvents() {
       void queryClient.invalidateQueries({ queryKey: adminKeys.order(event.order.id) });
       // Perlu tindakan: cash baru masuk, atau bukti QRIS baru diupload.
       if (event.order.status === 'AWAITING_CONFIRMATION') {
-        useAdminUi.getState().setIncoming({ id: event.order.id, code: event.order.code, total: event.order.total });
+        useAdminUi
+          .getState()
+          .setIncoming({ id: event.order.id, code: event.order.code, total: event.order.total });
         playChime();
         vibrate([200, 100, 200]);
       }

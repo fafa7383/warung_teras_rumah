@@ -30,7 +30,13 @@ export function MenuImage({
 
   if (!src || failed) {
     return (
-      <div className={cn('flex size-full items-center justify-center bg-[#FFF5EC]', grayscale && 'grayscale', className)}>
+      <div
+        className={cn(
+          'flex size-full items-center justify-center bg-[#F5F5F7]',
+          grayscale && 'grayscale',
+          className,
+        )}
+      >
         {/* Persegi 62% lebar, tapi tidak lebih tinggi dari 80% kotak agar tidak terpotong di foto 16:9. */}
         <FoodArt kind={categorySlug} className="aspect-square h-auto max-h-[80%] w-[62%]" />
       </div>

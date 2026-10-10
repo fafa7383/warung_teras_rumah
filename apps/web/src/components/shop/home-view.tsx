@@ -65,20 +65,22 @@ export function HomeView({ store: initialStore, home }: { store: StoreDto; home:
   const { data: store = initialStore } = useStoreQuery(initialStore);
   const quantities = useCartQuantities();
   const today = getTodayHours(store.hours);
+  const heroRef = useRef<HTMLElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="flex flex-col lg:px-6 lg:pt-8">
-      <HomeHero store={store} sheetRef={sheetRef} />
+      <HomeHero store={store} heroRef={heroRef} sheetRef={sheetRef} />
 
       {/* Wadah konten bersudut membulat di atas langit (seperti sheet iOS). Header menempel di
           belakang, jadi saat di-scroll wadah ini yang naik menutupinya. Bayangannya dipasang di
           ::before setinggi 128 px di bagian atas saja, sehingga tidak pernah muncul di ujung
-          bawah konten. Di desktop tanpa bayangan. */}
+          bawah konten. Di desktop tanpa bayangan. Selama splash wadah menunggu di bawah layar
+          (.home-sheet di globals.css). */}
       <div
         ref={sheetRef}
         className={cn(
-          'relative z-10 rounded-t-[28px] bg-canvas pt-2.5 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-32 before:rounded-t-[28px] before:shadow-[0_-16px_28px_-14px_rgb(0_0_0/0.5)] lg:rounded-t-[32px] lg:before:hidden',
+          'home-sheet relative z-10 rounded-t-[28px] bg-canvas pt-2.5 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-32 before:rounded-t-[28px] before:shadow-[0_-16px_28px_-14px_rgb(0_0_0/0.5)] lg:rounded-t-[32px] lg:before:hidden',
           HERO_SHEET_OVERLAP_CLASS,
         )}
       >
@@ -108,7 +110,7 @@ export function HomeView({ store: initialStore, home }: { store: StoreDto; home:
           )}
 
           {home.recommended.length > 0 && (
-            <section className="-mx-4 reveal bg-tint-soft/70 px-4 py-6 lg:mx-0 lg:rounded-sheet lg:px-6">
+            <section className="-mx-4 reveal section-wash px-4 py-9 lg:-mx-6 lg:px-6">
               <SectionTitle title="Pilihan Teras Rumah" />
               <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-4">
                 {home.recommended.map((item) => (

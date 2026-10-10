@@ -37,8 +37,10 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-// Dijalankan sebelum halaman tampil: splash hanya sekali per sesi dan tidak untuk link pesanan/admin (PRD 5.4).
-const splashScript = `try{var p=location.pathname;var d=document.documentElement;if(sessionStorage.getItem('wtr-splash')||p.indexOf('/pesanan')===0||p.indexOf('/admin')===0||p.indexOf('/offline')===0){d.dataset.splash='done'}else{d.dataset.splash='running'}}catch(e){document.documentElement.dataset.splash='done'}`;
+// Dijalankan sebelum halaman tampil: splash muncul setiap kali Home dibuka atau di-refresh,
+// karena splash-nya adalah header Home itu sendiri (home-splash.tsx). Pindah halaman di dalam
+// app tidak memicunya; link langsung ke menu, pesanan, atau admin langsung membuka halamannya.
+const splashScript = `document.documentElement.dataset.splash=location.pathname==='/'?'running':'done';`;
 
 // Suasana header Home (pagi/sore/malam WIB) juga dipasang sebelum paint agar tidak berkedip.
 // Saat development, `?jam=19.5` meniru jam lain (lihat lib/day-clock.ts).

@@ -2,7 +2,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import { isProduction } from './env';
+import { env, isProduction } from './env';
 import { isAllowedOrigin } from './lib/origins';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { adminRouter } from './routes/admin';
@@ -12,10 +12,12 @@ import { publicRouter } from './routes/public';
 export function createApp() {
   const app = express();
 
-  // Railway menaruh API di belakang 1 proxy; dibutuhkan agar rate limit membaca IP asli pembeli.
-  app.set('trust proxy', isProduction ? 1 : false);
+  // Hosting menaruh API di belakang proxy (Render: 1); dibutuhkan agar rate limit membaca IP
+  // asli pembeli. Pembeli memanggil API langsung, admin lewat proxy web (lihat next.config.ts).
+  app.set('trust proxy', isProduction ? env.TRUST_PROXY_HOPS : false);
 
-  // Web & API berada di site yang sama (warungterasrumah.com / api.warungterasrumah.com).
+  // CORP hanya berlaku untuk request no-cors (gambar/skrip); panggilan fetch lintas domain dari
+  // web tetap diatur CORS di bawah.
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-site' } }));
   app.use(
     cors({

@@ -1,0 +1,15 @@
+# Netlify untuk web (Next.js). Pengaturan di dashboard Netlify:
+#   Base directory    : (kosongkan — root repo, tempat pnpm-lock.yaml)
+#   Package directory : apps/web
+# Plugin Next.js dipasang otomatis oleh Netlify; Functions directory biarkan bawaan.
+#
+# Environment variables (Site configuration → Environment variables):
+#   NEXT_PUBLIC_API_URL            = alamat API di Render, mis. https://warung-teras-rumah-api.onrender.com
+#   API_URL_INTERNAL               = alamat yang sama (dipakai server web & proxy /api/admin)
+#   NEXT_PUBLIC_TURNSTILE_SITE_KEY = site key Cloudflare Turnstile
+[build]
+  command = "pnpm --filter @wtr/web build"
+  publish = "apps/web/.next"
+
+[build.environment]
+  NODE_VERSION = "24"

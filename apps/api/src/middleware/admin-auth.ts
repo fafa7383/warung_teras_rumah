@@ -35,10 +35,21 @@ export const requireAdmin: RequestHandler = async (req, res, next) => {
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+/** Asal (scheme://host) dari header Referer, untuk proxy yang tidak meneruskan header Origin. */
+function refererOrigin(referer: string | undefined): string | undefined {
+  if (!referer) return undefined;
+  try {
+    return new URL(referer).origin;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Semua request admin yang mengubah data wajib berasal dari domain web sendiri (PRD 10.6). */
 export const requireSameOrigin: RequestHandler = (req, _res, next) => {
   if (SAFE_METHODS.has(req.method)) return next();
-  if (!isAllowedOrigin(req.get('origin'))) {
+  const origin = req.get('origin') ?? refererOrigin(req.get('referer'));
+  if (!isAllowedOrigin(origin)) {
     throw new HttpError(403, 'FORBIDDEN_ORIGIN', 'Permintaan ditolak');
   }
   next();

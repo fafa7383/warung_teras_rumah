@@ -1,6 +1,11 @@
 'use client';
 
-import { addDaysToDateKey, formatRupiah, type ReportBreakdown, type ReportResponse } from '@wtr/shared';
+import {
+  addDaysToDateKey,
+  formatRupiah,
+  type ReportBreakdown,
+  type ReportResponse,
+} from '@wtr/shared';
 import { useState } from 'react';
 import { BowlLoader } from '@/components/brand/food-art';
 import { buttonClass } from '@/components/ui/button';
@@ -22,8 +27,12 @@ const GRID = '#e5e5ea';
 type Period = 'today' | '7d' | '30d' | 'custom';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-const shortDate = (key: string) => `${Number(key.slice(8, 10))} ${MONTHS[Number(key.slice(5, 7)) - 1]}`;
-const compactRupiah = new Intl.NumberFormat('id-ID', { notation: 'compact', maximumFractionDigits: 1 });
+const shortDate = (key: string) =>
+  `${Number(key.slice(8, 10))} ${MONTHS[Number(key.slice(5, 7)) - 1]}`;
+const compactRupiah = new Intl.NumberFormat('id-ID', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
 
 function rangeFor(period: Period, custom: { from: string; to: string }) {
   const today = todayKey();
@@ -36,9 +45,19 @@ function rangeFor(period: Period, custom: { from: string; to: string }) {
 /** Kotak angka: label + nilai (angka proporsional, bukan tabular). */
 function StatTile({ label, value, hero }: { label: string; value: string; hero?: boolean }) {
   return (
-    <div className={cn('flex flex-col gap-1 rounded-section bg-surface p-4 shadow-card', hero && 'col-span-2')}>
+    <div
+      className={cn(
+        'flex flex-col gap-1 rounded-section bg-surface p-4 shadow-card',
+        hero && 'col-span-2',
+      )}
+    >
       <span className="text-footnote text-label-2">{label}</span>
-      <span className={cn('font-semibold text-label', hero ? 'text-[44px] leading-[52px] tracking-tight' : 'text-title-2')}>
+      <span
+        className={cn(
+          'font-semibold text-label',
+          hero ? 'text-[44px] leading-[52px] tracking-tight' : 'text-title-2',
+        )}
+      >
         {value}
       </span>
     </div>
@@ -59,13 +78,20 @@ function SplitBar({
     <div className="flex flex-col gap-3 px-4 py-4">
       <p className="text-subhead font-semibold">{title}</p>
       {total > 0 ? (
-        <div className="flex h-3 gap-[2px]" role="img" aria-label={`${title}: ${parts.map((p) => `${p.label} ${formatRupiah(p.value.revenue)}`).join(', ')}`}>
+        <div
+          className="flex h-3 gap-[2px]"
+          role="img"
+          aria-label={`${title}: ${parts.map((p) => `${p.label} ${formatRupiah(p.value.revenue)}`).join(', ')}`}
+        >
           {parts.map((part, index) =>
             part.value.revenue > 0 ? (
               <span
                 key={part.label}
                 className="h-full first:rounded-l-[4px] last:rounded-r-[4px]"
-                style={{ width: `${(part.value.revenue / total) * 100}%`, backgroundColor: colors[index] }}
+                style={{
+                  width: `${(part.value.revenue / total) * 100}%`,
+                  backgroundColor: colors[index],
+                }}
               />
             ) : null,
           )}
@@ -76,10 +102,16 @@ function SplitBar({
       <ul className="flex flex-col gap-1.5">
         {parts.map((part, index) => (
           <li key={part.label} className="flex items-center gap-2 text-subhead">
-            <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: colors[index] }} aria-hidden="true" />
+            <span
+              className="size-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: colors[index] }}
+              aria-hidden="true"
+            />
             <span className="flex-1 text-label">{part.label}</span>
             <span className="text-label-2 tabular-nums">{part.value.count} pesanan</span>
-            <span className="w-24 text-right font-semibold tabular-nums">{formatRupiah(part.value.revenue)}</span>
+            <span className="w-24 text-right font-semibold tabular-nums">
+              {formatRupiah(part.value.revenue)}
+            </span>
             <span className="w-10 text-right text-label-2 tabular-nums">
               {total > 0 ? `${Math.round((part.value.revenue / total) * 100)}%` : '–'}
             </span>
@@ -111,7 +143,11 @@ function DailyRevenueChart({ daily }: { daily: ReportResponse['daily'] }) {
     <div className="flex flex-col gap-3 px-4 py-4">
       <div className="flex items-center justify-between">
         <p className="text-subhead font-semibold">Omzet per hari</p>
-        <button type="button" onClick={() => setShowTable((v) => !v)} className="tap text-subhead text-tint">
+        <button
+          type="button"
+          onClick={() => setShowTable((v) => !v)}
+          className="text-subhead text-tint tap"
+        >
           {showTable ? 'Lihat grafik' : 'Lihat tabel'}
         </button>
       </div>
@@ -148,7 +184,10 @@ function DailyRevenueChart({ daily }: { daily: ReportResponse['daily'] }) {
                 <span className="w-10 shrink-0 text-right text-caption text-label-2 tabular-nums">
                   {tick === 0 ? '0' : compactRupiah.format(tick)}
                 </span>
-                <span className="h-px flex-1" style={{ backgroundColor: tick === 0 ? '#c7c7cc' : GRID }} />
+                <span
+                  className="h-px flex-1"
+                  style={{ backgroundColor: tick === 0 ? '#c7c7cc' : GRID }}
+                />
               </div>
             ))}
             <div className="absolute inset-y-0 right-0 left-12 flex items-end gap-[2px]">
@@ -177,15 +216,22 @@ function DailyRevenueChart({ daily }: { daily: ReportResponse['daily'] }) {
           </div>
           <div className="mt-1.5 ml-12 flex gap-[2px]" aria-hidden="true">
             {daily.map((day, index) => (
-              <span key={day.date} className="flex-1 overflow-visible text-center text-caption whitespace-nowrap text-label-2">
+              <span
+                key={day.date}
+                className="flex-1 overflow-visible text-center text-caption whitespace-nowrap text-label-2"
+              >
                 {index % labelEvery === 0 ? shortDate(day.date) : ''}
               </span>
             ))}
           </div>
           {activeDay && (
-            <div className="pointer-events-none absolute top-0 left-12 right-0 flex justify-center" role="status">
+            <div
+              className="pointer-events-none absolute top-0 right-0 left-12 flex justify-center"
+              role="status"
+            >
               <span className="rounded-full bg-label px-3 py-1 text-footnote text-white shadow-float">
-                {shortDate(activeDay.date)} · {formatRupiah(activeDay.revenue)} · {activeDay.count} pesanan
+                {shortDate(activeDay.date)} · {formatRupiah(activeDay.revenue)} · {activeDay.count}{' '}
+                pesanan
               </span>
             </div>
           )}
@@ -197,7 +243,10 @@ function DailyRevenueChart({ daily }: { daily: ReportResponse['daily'] }) {
 
 function TopItems({ items }: { items: ReportResponse['topItems'] }) {
   const max = Math.max(1, ...items.map((item) => item.quantity));
-  if (items.length === 0) return <p className="px-4 py-4 text-subhead text-label-2">Belum ada penjualan di periode ini.</p>;
+  if (items.length === 0)
+    return (
+      <p className="px-4 py-4 text-subhead text-label-2">Belum ada penjualan di periode ini.</p>
+    );
   return (
     <ol className="flex flex-col gap-3 px-4 py-4">
       {items.map((item, index) => (
@@ -211,7 +260,10 @@ function TopItems({ items }: { items: ReportResponse['topItems'] }) {
               {item.quantity} porsi · {formatRupiah(item.revenue)}
             </span>
           </div>
-          <span className="h-2 rounded-r-[4px]" style={{ width: `${(item.quantity / max) * 100}%`, backgroundColor: SERIES_1 }} />
+          <span
+            className="h-2 rounded-r-[4px]"
+            style={{ width: `${(item.quantity / max) * 100}%`, backgroundColor: SERIES_1 }}
+          />
         </li>
       ))}
     </ol>
@@ -221,10 +273,13 @@ function TopItems({ items }: { items: ReportResponse['topItems'] }) {
 /** Laporan sederhana (PRD 8.5): hanya pesanan berhasil (Selesai & Dikonfirmasi). */
 export function ReportsView() {
   const [period, setPeriod] = useState<Period>('7d');
-  const [custom, setCustom] = useState(() => ({ from: addDaysToDateKey(todayKey(), -6), to: todayKey() }));
+  const [custom, setCustom] = useState(() => ({
+    from: addDaysToDateKey(todayKey(), -6),
+    to: todayKey(),
+  }));
   const { from, to } = rangeFor(period, custom);
   const { data, isPending, isError } = useAdminReport(from, to);
-  const csvUrl = `${publicEnv.apiUrl}/api/admin/reports/export.csv?from=${from}&to=${to}`;
+  const csvUrl = `${publicEnv.adminApiUrl}/api/admin/reports/export.csv?from=${from}&to=${to}`;
 
   return (
     <>
@@ -244,13 +299,20 @@ export function ReportsView() {
         {period === 'custom' && (
           <div className="grid grid-cols-2 gap-3">
             {(['from', 'to'] as const).map((key) => (
-              <label key={key} className="flex flex-col gap-1 rounded-section bg-surface px-4 py-2.5">
-                <span className="text-footnote text-label-2">{key === 'from' ? 'Dari' : 'Sampai'}</span>
+              <label
+                key={key}
+                className="flex flex-col gap-1 rounded-section bg-surface px-4 py-2.5"
+              >
+                <span className="text-footnote text-label-2">
+                  {key === 'from' ? 'Dari' : 'Sampai'}
+                </span>
                 <input
                   type="date"
                   value={custom[key]}
                   max={todayKey()}
-                  onChange={(event) => event.target.value && setCustom((c) => ({ ...c, [key]: event.target.value }))}
+                  onChange={(event) =>
+                    event.target.value && setCustom((c) => ({ ...c, [key]: event.target.value }))
+                  }
                   className="bg-transparent text-body outline-none"
                 />
               </label>
@@ -267,7 +329,10 @@ export function ReportsView() {
             <div className="grid grid-cols-2 gap-3">
               <StatTile label="Omzet" value={formatRupiah(data.revenue)} hero />
               <StatTile label="Pesanan berhasil" value={data.orderCount.toLocaleString('id-ID')} />
-              <StatTile label="Rata-rata per pesanan" value={formatRupiah(data.averageOrderValue)} />
+              <StatTile
+                label="Rata-rata per pesanan"
+                value={formatRupiah(data.averageOrderValue)}
+              />
             </div>
 
             {data.daily.length > 1 && (
