@@ -1,7 +1,7 @@
 'use client';
 
 import { animate, motion, useAnimationControls, useMotionValue, useTransform } from 'motion/react';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { LogoMark } from '@/components/brand/logo';
 import { Button } from '@/components/ui/button';
 import { usePrefersReducedMotion } from '@/lib/hooks';
@@ -35,8 +35,13 @@ const GROUND_INSET = 34;
 const BRAND_SHADOW_ON = '0px 1px 2px rgba(0,0,0,0.2), 0px 2px 18px rgba(0,0,0,0.25)';
 const BRAND_SHADOW_OFF = '0px 1px 2px rgba(0,0,0,0), 0px 2px 18px rgba(0,0,0,0)';
 
+type SplashState = 'running' | 'leaving' | 'done';
+
 const noopSubscribe = () => () => {};
-const readSplashState = () => document.documentElement.dataset.splash ?? 'running';
+/** Status splash di <html>; bila atributnya hilang, tebak seperti skrip awal di layout.tsx. */
+const readSplashState = (): SplashState =>
+  (document.documentElement.dataset.splash as SplashState | undefined) ??
+  (location.pathname === '/' ? 'running' : 'done');
 
 interface Box {
   top: number;
@@ -120,6 +125,24 @@ export function HomeSplash() {
   const brandRef = useRef<HTMLDivElement>(null);
   const brand = useAnimationControls();
 
+  // Penjaga status: bila React terpaksa merender ulang seluruh halaman (mis. hosting atau
+  // ekstensi browser — terjemahan otomatis Chrome — menyisipkan elemen sebelum hidrasi),
+  // atribut di <html> ikut terhapus dan splash "patah". Status yang seharusnya disimpan di sini
+  // dan dipasang lagi sebelum layar digambar ulang.
+  const splashStateRef = useRef<SplashState | null>(null);
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    splashStateRef.current ??= readSplashState();
+    const restore = () => {
+      const expected = splashStateRef.current;
+      if (expected && root.dataset.splash !== expected) root.dataset.splash = expected;
+    };
+    restore();
+    const observer = new MutationObserver(restore);
+    observer.observe(root, { attributes: true, attributeFilter: ['data-splash'] });
+    return () => observer.disconnect();
+  }, []);
+
   // Lubang jendela pada lapisan polos (px dari kiri atas layar). Lapisannya satu elemen dengan
   // clip-path "layar dikurangi kotak bulat", jadi tidak ada celah di layar berskala pecahan.
   const holeX = useMotionValue(0);
@@ -198,12 +221,14 @@ export function HomeSplash() {
     const timers = [
       setTimeout(
         () => {
+          splashStateRef.current = 'leaving';
           root.dataset.splash = 'leaving';
         },
         reduceMotion ? 0 : LEAVING_AFTER_MS,
       ),
       setTimeout(
         () => {
+          splashStateRef.current = 'done';
           root.dataset.splash = 'done';
           setPhase('done');
         },

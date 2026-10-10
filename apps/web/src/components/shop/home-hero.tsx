@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useMotionValue, useTransform } from 'motion/re
 import Link from 'next/link';
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -41,30 +42,39 @@ const BIRDS = [
   { top: 22, width: 14 },
 ];
 
-/** `skyBehindStatusBar` false saat bar cari menempel di atas: bar status kembali terang. */
+/**
+ * `skyBehindStatusBar` false saat bar cari menempel di atas: bar status kembali terang.
+ * Memakai layout effect & mengawasi atribut <html>, agar suasana terpasang lagi sebelum layar
+ * digambar bila React sempat merender ulang seluruh halaman (lihat home-splash.tsx).
+ */
 function useDaypartSync(skyBehindStatusBar: boolean) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     const originalTheme = meta?.content;
 
     const sync = () => {
       const hour = currentWibHour();
-      root.dataset.daypart = daypartFromHour(hour);
+      const daypart = daypartFromHour(hour);
+      // Hanya diubah bila berbeda: mengubah atribut memicu observer di bawah lagi.
+      if (root.dataset.daypart !== daypart) root.dataset.daypart = daypart;
       // Bar status ikut warna langit, tapi baru setelah splash selesai agar tidak bentrok.
       if (!meta || root.dataset.splash !== 'done') return;
-      if (skyBehindStatusBar) meta.content = skyThemeColor(hour);
-      else if (originalTheme) meta.content = originalTheme;
+      const theme = skyBehindStatusBar ? skyThemeColor(hour) : originalTheme;
+      if (theme && meta.content !== theme) meta.content = theme;
     };
 
     sync();
     const timer = setInterval(sync, SYNC_INTERVAL_MS);
-    const splashObserver = new MutationObserver(sync);
-    splashObserver.observe(root, { attributes: true, attributeFilter: ['data-splash'] });
+    const rootObserver = new MutationObserver(sync);
+    rootObserver.observe(root, {
+      attributes: true,
+      attributeFilter: ['data-splash', 'data-daypart'],
+    });
     document.addEventListener('visibilitychange', sync);
     return () => {
       clearInterval(timer);
-      splashObserver.disconnect();
+      rootObserver.disconnect();
       document.removeEventListener('visibilitychange', sync);
       if (meta && originalTheme) meta.content = originalTheme;
     };
