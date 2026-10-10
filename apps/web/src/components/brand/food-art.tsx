@@ -332,14 +332,3 @@ export function Steam({ className }: { className?: string }) {
     </svg>
   );
 }
-
-/** Loader admin: mangkok kecil statis dengan uap bergerak (PRD 5.4). */
-export function BowlLoader({ label = 'Memuat…' }: { label?: string }) {
-  return (
-    <div className="flex flex-col items-center gap-2 py-16" role="status" aria-label={label}>
-      <Steam className="h-7 w-10" />
-      <BowlArt variant="bakso" size={64} spoon={false} />
-      <span className="text-footnote text-label-2">{label}</span>
-    </div>
-  );
-}

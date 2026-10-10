@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Reorder, useDragControls } from 'motion/react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { BowlLoader } from '@/components/brand/food-art';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { MenuImage } from '@/components/shop/menu-image';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { Switch } from '@/components/ui/controls';
@@ -180,7 +180,7 @@ export function MenuManageView() {
         )}
 
         {isPending ? (
-          <BowlLoader label="Memuat menu…" />
+          <WarungLoader topic="admin-menu" />
         ) : reordering && data ? (
           <>
             <p className="px-1 text-footnote text-label-2">Tahan ikon ⋮⋮ lalu geser untuk mengubah urutan tampil di pembeli.</p>

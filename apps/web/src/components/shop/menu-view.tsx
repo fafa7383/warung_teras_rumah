@@ -2,7 +2,8 @@
 
 import type { MenuItemDto, MenuResponse } from '@wtr/shared';
 import { AnimatePresence, motion } from 'motion/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BowlArt } from '@/components/brand/food-art';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchField } from '@/components/ui/fields';
@@ -27,15 +28,36 @@ function matches(item: MenuItemDto, query: string) {
 /** Menu habis selalu di akhir kategorinya (PRD 6.2). */
 const availableFirst = (a: MenuItemDto, b: MenuItemDto) => Number(b.isAvailable) - Number(a.isAvailable);
 
-export function MenuView({
-  menu: initialMenu,
-  initialCategory,
-  autoFocusSearch,
+/**
+ * Kategori (?kategori=) dan fokus kolom cari (?cari=1) dari link Home dibaca di browser, bukan
+ * di server, agar halaman Menu tetap statis dan ikut ter-prefetch penuh.
+ */
+function MenuLinkIntent({
+  onCategory,
+  onSearch,
 }: {
-  menu: MenuResponse;
-  initialCategory?: string;
-  autoFocusSearch?: boolean;
+  onCategory: (slug: string) => void;
+  onSearch: () => void;
 }) {
+  const params = useSearchParams();
+  const category = params.get('kategori');
+  const search = params.get('cari') === '1';
+
+  useEffect(() => {
+    if (search) onSearch();
+  }, [search, onSearch]);
+
+  useEffect(() => {
+    if (!category) return;
+    // Tunggu layout pertama selesai sebelum melompat ke kategori dari Home.
+    const frame = requestAnimationFrame(() => onCategory(category));
+    return () => cancelAnimationFrame(frame);
+  }, [category, onCategory]);
+
+  return null;
+}
+
+export function MenuView({ menu: initialMenu }: { menu: MenuResponse }) {
   const { data: menu = initialMenu } = useMenuQuery(initialMenu);
   const quantities = useCartQuantities();
   const reduceMotion = usePrefersReducedMotion();
@@ -76,16 +98,8 @@ export function MenuView({
     [],
   );
 
-  useEffect(() => {
-    if (autoFocusSearch) searchRef.current?.focus();
-  }, [autoFocusSearch]);
-
-  useEffect(() => {
-    if (!initialCategory) return;
-    // Tunggu layout pertama selesai sebelum melompat ke kategori dari Home.
-    const frame = requestAnimationFrame(() => scrollToCategory(initialCategory, 'auto'));
-    return () => cancelAnimationFrame(frame);
-  }, [initialCategory, scrollToCategory]);
+  const focusSearch = useCallback(() => searchRef.current?.focus(), []);
+  const jumpToCategory = useCallback((slug: string) => scrollToCategory(slug, 'auto'), [scrollToCategory]);
 
   // Scroll-spy: chip aktif mengikuti section yang sedang di bawah area filter.
   useEffect(() => {
@@ -126,6 +140,9 @@ export function MenuView({
 
   return (
     <>
+      <Suspense fallback={null}>
+        <MenuLinkIntent onCategory={jumpToCategory} onSearch={focusSearch} />
+      </Suspense>
       <PageHeader title="Semua Menu" />
 
       <div className="glass hairline-b sticky top-[calc(env(safe-area-inset-top)+52px)] z-20 flex flex-col gap-2.5 py-2.5 lg:top-16">

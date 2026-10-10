@@ -3,8 +3,9 @@
 import { formatDateTimeWIB, formatRupiah, isFinalStatus, type OrderSummaryDto } from '@wtr/shared';
 import Link from 'next/link';
 import { BowlArt } from '@/components/brand/food-art';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { ButtonLink } from '@/components/ui/button';
-import { EmptyState, Skeleton } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/ui/empty-state';
 import { ChevronRight } from '@/components/ui/icons';
 import { ListSection } from '@/components/ui/list';
 import { PageHeader } from '@/components/ui/page-header';
@@ -67,10 +68,7 @@ export function HistoryView() {
       </PageHeader>
       <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 lg:px-6">
         {!hydrated || (tokens.length > 0 && isPending) ? (
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-20 rounded-section" />
-            <Skeleton className="h-20 rounded-section" />
-          </div>
+          <WarungLoader topic="riwayat" />
         ) : sorted.length === 0 ? (
           <EmptyState
             art={<BowlArt variant="mie-ayam" size={104} spoon={false} className="opacity-70 grayscale" />}

@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Controller, useFieldArray, useForm, type Control, type FieldErrors, type UseFormRegister } from 'react-hook-form';
 import type { z } from 'zod';
-import { BowlLoader } from '@/components/brand/food-art';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { Button } from '@/components/ui/button';
 import { SegmentedControl, Stepper, Switch } from '@/components/ui/controls';
 import { ConfirmDialog } from '@/components/ui/dialog';
@@ -191,7 +191,7 @@ export function MenuFormView({ menuId }: { menuId?: string }) {
   const groups = useFieldArray({ control, name: 'optionGroups' });
   const errors = formState.errors;
 
-  if (menuId && existing.isPending) return <BowlLoader label="Memuat menu…" />;
+  if (menuId && existing.isPending) return <WarungLoader topic="admin-menu" fill />;
   if (menuId && existing.isError) return <EmptyState title="Menu tidak ditemukan" />;
 
   const save = async (values: MenuFormValues) => {

@@ -11,7 +11,8 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { Reorder, useDragControls } from 'motion/react';
 import { useState, type ReactNode } from 'react';
-import { BowlLoader, FoodArt } from '@/components/brand/food-art';
+import { FoodArt } from '@/components/brand/food-art';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { Button } from '@/components/ui/button';
 import { SegmentedControl, Switch } from '@/components/ui/controls';
 import { ConfirmDialog } from '@/components/ui/dialog';
@@ -228,7 +229,7 @@ export function BannerSettings() {
       <SubpageHeader title="Banner Promo" />
       <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pt-2">
         {isPending ? (
-          <BowlLoader />
+          <WarungLoader topic="pengaturan" />
         ) : list.length === 0 ? (
           <EmptyState title="Belum ada banner" message="Banner tampil di Home pembeli, geser otomatis tiap 4 detik." />
         ) : (
@@ -395,7 +396,7 @@ export function CategorySettings() {
       <SubpageHeader title="Kategori Menu" />
       <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pt-2">
         {isPending ? (
-          <BowlLoader />
+          <WarungLoader topic="pengaturan" />
         ) : (
           <ListSection header="Urutan tampil" footer="Kategori yang disembunyikan tidak tampil di pembeli, menunya ikut tersembunyi.">
             <Reorder.Group axis="y" values={list} onReorder={setOrdered} className="list-separators">

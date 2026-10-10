@@ -21,12 +21,13 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Controller, useForm, type DefaultValues } from 'react-hook-form';
 import { BowlArt } from '@/components/brand/food-art';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { AnimatedRupiah } from '@/components/motion/animated-number';
 import { ConfettiBurst, DrawnCheck, RingPulse } from '@/components/motion/celebration';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { ChoiceRow, Switch } from '@/components/ui/controls';
 import { ConfirmDialog } from '@/components/ui/dialog';
-import { EmptyState, Skeleton } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/ui/empty-state';
 import { FieldRow, TextArea, TextInput } from '@/components/ui/fields';
 import { Armchair, Banknote, Bike, CircleAlert, CircleCheck, Plus, QrCode, type LucideIcon } from '@/components/ui/icons';
 import { ListRow, ListSection, RowIcon } from '@/components/ui/list';
@@ -336,10 +337,7 @@ export function CheckoutView({ initialStore }: { initialStore: StoreDto | null }
     return (
       <>
         <PageHeader title="Keranjang" />
-        <div className="flex flex-col gap-3 px-4">
-          <Skeleton className="h-24 rounded-section" />
-          <Skeleton className="h-40 rounded-section" />
-        </div>
+        <WarungLoader topic="keranjang" />
       </>
     );
   }

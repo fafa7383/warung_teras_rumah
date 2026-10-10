@@ -7,7 +7,7 @@ import {
   type ReportResponse,
 } from '@wtr/shared';
 import { useState } from 'react';
-import { BowlLoader } from '@/components/brand/food-art';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { buttonClass } from '@/components/ui/button';
 import { SegmentedControl } from '@/components/ui/controls';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -321,7 +321,7 @@ export function ReportsView() {
         )}
 
         {isPending ? (
-          <BowlLoader label="Menghitung laporan…" />
+          <WarungLoader topic="laporan" />
         ) : isError || !data ? (
           <EmptyState title="Laporan belum bisa dimuat" message="Coba lagi sebentar ya." />
         ) : (

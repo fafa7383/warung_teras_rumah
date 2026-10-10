@@ -8,6 +8,7 @@ import { Logo } from '@/components/brand/logo';
 import { AnimatedRupiah, RollingNumber } from '@/components/motion/animated-number';
 import { useCartTarget } from '@/components/motion/fly-to-cart';
 import { ChevronRight, House, ShoppingBag, Utensils, type LucideIcon } from '@/components/ui/icons';
+import { LinkPending } from '@/components/ui/link-pending';
 import { cartTotals, useCartStore } from '@/lib/cart-store';
 import { cn } from '@/lib/cn';
 import { useHydrated } from '@/lib/hooks';
@@ -123,6 +124,7 @@ export function TabBar() {
                   transition={spring.smooth}
                 />
               )}
+              <LinkPending />
               <motion.span
                 whileTap={{ scale: 0.82 }}
                 transition={spring.snappy}
@@ -184,6 +186,7 @@ export function TopNav() {
                   transition={spring.smooth}
                 />
               )}
+              <LinkPending />
               <span className="relative">{link.label}</span>
             </Link>
           ))}
@@ -194,6 +197,7 @@ export function TopNav() {
             aria-label={`Keranjang, ${count} item`}
             className="relative flex size-11 tap-scale items-center justify-center rounded-full bg-fill text-label"
           >
+            <LinkPending />
             <CartIcon size={22} strokeWidth={2} />
           </Link>
         </div>

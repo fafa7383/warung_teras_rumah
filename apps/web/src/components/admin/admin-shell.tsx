@@ -6,9 +6,10 @@ import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useSyncExternalStore, type ReactNode } from 'react';
-import { BowlLoader } from '@/components/brand/food-art';
 import { Logo } from '@/components/brand/logo';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { ChartColumn, ChevronRight, ClipboardList, Settings, Utensils, Volume2, X, type LucideIcon } from '@/components/ui/icons';
+import { LinkPending } from '@/components/ui/link-pending';
 import { Toaster } from '@/components/ui/toaster';
 import { useAdminMe, useAdminOrders, useAdminSettings } from '@/lib/admin-api';
 import { enableSound, isSoundPreferred, isSoundReady, playChime, subscribeSound } from '@/lib/admin-sound';
@@ -143,7 +144,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   if (!authed) {
     return (
       <div className="flex min-h-dvh items-center justify-center">
-        <BowlLoader label="Membuka dashboard…" />
+        <WarungLoader topic="admin" />
       </div>
     );
   }
@@ -167,15 +168,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'tap-row flex h-11 items-center gap-3 rounded-control px-3 text-body',
+                  'tap-row relative flex h-11 items-center gap-3 rounded-control px-3 text-body',
                   active ? 'bg-tint-soft font-semibold text-tint-pressed' : 'text-label',
                 )}
               >
+                <LinkPending className="rounded-control" />
                 <span className="relative">
                   <Icon size={22} aria-hidden="true" />
                   {item.href === '/admin' && <NeedsActionBadge count={badge} />}
                 </span>
-                {item.label}
+                <span className="relative">{item.label}</span>
               </Link>
             );
           })}
@@ -215,6 +217,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                     transition={{ type: 'spring', stiffness: 500, damping: 38 }}
                   />
                 )}
+                <LinkPending />
                 <span className="relative">
                   <Icon size={24} strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
                   {item.href === '/admin' && <NeedsActionBadge count={badge} />}

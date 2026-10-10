@@ -18,10 +18,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { BowlArt } from '@/components/brand/food-art';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { ConfettiBurst } from '@/components/motion/celebration';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/dialog';
-import { EmptyState, Skeleton } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Armchair, Bike, Copy, MessageCircle, Receipt, RotateCcw } from '@/components/ui/icons';
 import { ListRow, ListSection } from '@/components/ui/list';
 import { BackButton } from '@/components/ui/page-header';
@@ -148,11 +149,7 @@ export function OrderStatusView({ token }: { token: string }) {
     return (
       <>
         <OrderTopBar title="Pesanan" />
-        <div className="mx-auto flex max-w-2xl flex-col gap-4 px-4 pt-4">
-          <Skeleton className="h-16 rounded-section" />
-          <Skeleton className="h-64 rounded-card" />
-          <Skeleton className="h-40 rounded-section" />
-        </div>
+        <WarungLoader topic="pesanan" fill />
       </>
     );
   }

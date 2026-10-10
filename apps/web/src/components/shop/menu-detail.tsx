@@ -11,8 +11,9 @@ import {
   type OptionGroupDto,
 } from '@wtr/shared';
 import { AnimatePresence, motion } from 'motion/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useRef, useState } from 'react';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { AnimatedRupiah } from '@/components/motion/animated-number';
 import { Button, IconButton } from '@/components/ui/button';
 import { ChoiceRow, Stepper } from '@/components/ui/controls';
@@ -255,13 +256,11 @@ function MenuDetailContent({ item, editKey, onDone }: MenuDetailProps) {
  */
 export function MenuDetailSheet({
   item,
-  editKey,
-  closeHref,
+  standalone = false,
 }: {
   item: MenuItemDto;
-  editKey?: string;
-  /** Saat halaman dibuka langsung dari link, tutup = pindah ke halaman ini (bukan history.back). */
-  closeHref?: string;
+  /** Dibuka langsung dari link: tutup = pindah ke Menu/Keranjang, bukan history.back. */
+  standalone?: boolean;
 }) {
   const router = useRouter();
   const hydrated = useHydrated();
@@ -269,14 +268,48 @@ export function MenuDetailSheet({
 
   const close = () => {
     setOpen(false);
+    // Mode ubah (?edit=) dibuka dari Keranjang, jadi kembali ke sana.
+    const closeHref = new URLSearchParams(window.location.search).has('edit') ? '/keranjang' : '/menu';
     // Tunggu animasi turun selesai sebelum pindah route.
-    setTimeout(() => (closeHref ? router.replace(closeHref, { scroll: false }) : router.back()), 300);
+    setTimeout(() => (standalone ? router.replace(closeHref, { scroll: false }) : router.back()), 300);
   };
 
   return (
     <Sheet open={open} onClose={close} label={item.name} size="large">
       {/* Isi menunggu hidrasi agar data keranjang (mode ubah) sudah terbaca dari localStorage. */}
-      {hydrated && <MenuDetailContent item={item} editKey={editKey} onDone={close} />}
+      {hydrated && <MenuDetailBody item={item} onDone={close} />}
+    </Sheet>
+  );
+}
+
+/**
+ * Mode ubah (?edit=<baris keranjang>) dibaca di browser, bukan di server, agar halaman Detail Menu
+ * tetap statis dan ikut ter-prefetch: sheet langsung terbuka berisi saat kartu menu diketuk.
+ * Baru dirender setelah hidrasi, jadi render statisnya tidak jatuh ke render klien.
+ */
+function MenuDetailBody({ item, onDone }: { item: MenuItemDto; onDone: () => void }) {
+  const editKey = useSearchParams().get('edit') ?? undefined;
+  return <MenuDetailContent key={editKey ?? ''} item={item} editKey={editKey} onDone={onDone} />;
+}
+
+/**
+ * Sheet Detail Menu sementara (loading route): langsung naik saat menu diketuk, lalu digantikan
+ * sheet asli di posisi yang sama begitu datanya siap.
+ */
+export function MenuDetailLoading() {
+  const router = useRouter();
+  const [open, setOpen] = useState(true);
+
+  const close = () => {
+    setOpen(false);
+    setTimeout(() => router.back(), 300);
+  };
+
+  return (
+    <Sheet open={open} onClose={close} label="Memuat detail menu" size="large" placeholder>
+      <div className="flex min-h-[420px] flex-1 items-center justify-center">
+        <WarungLoader topic="detail" />
+      </div>
     </Sheet>
   );
 }

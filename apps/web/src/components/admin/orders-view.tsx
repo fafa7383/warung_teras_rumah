@@ -13,7 +13,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { BowlArt, BowlLoader } from '@/components/brand/food-art';
+import { BowlArt } from '@/components/brand/food-art';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { SegmentedControl } from '@/components/ui/controls';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Armchair, Bike } from '@/components/ui/icons';
@@ -171,7 +172,7 @@ export function OrdersView() {
           )}
 
           {isPending ? (
-            <BowlLoader label="Memuat pesanan…" />
+            <WarungLoader topic="admin-pesanan" />
           ) : data && data.orders.length > 0 ? (
             <div className="flex flex-col gap-3">
               {/* Pesanan baru meluncur masuk, kartu yang pindah tab menyusut keluar. */}

@@ -1,12 +1,13 @@
 'use client';
 
-import { AnimatePresence, motion, useDragControls, type DragControls } from 'motion/react';
+import { AnimatePresence, motion, useDragControls, useMotionValue, type DragControls } from 'motion/react';
 import {
   createContext,
   useContext,
   useEffect,
   useId,
   useRef,
+  useState,
   type PointerEvent,
   type ReactNode,
 } from 'react';
@@ -45,6 +46,16 @@ export function useOverlay(open: boolean, onClose: () => void) {
 
 const SheetDragContext = createContext<DragControls | null>(null);
 
+interface SheetPose {
+  panel: { y: string | number; scale: number; opacity: number };
+  backdrop: number;
+}
+
+// Posisi animasi sheet pengganti (loading) yang sedang tampil. Sheet asli yang menggantikannya
+// melanjutkan gerak dari posisi itu: tidak meluncur dari bawah untuk kedua kalinya, dan tetap
+// meluncur normal bila sheet pengganti belum sempat terlihat.
+let placeholderPose: (() => SheetPose | null) | null = null;
+
 interface SheetProps {
   open: boolean;
   onClose: () => void;
@@ -54,16 +65,49 @@ interface SheetProps {
   /** large = tinggi awal 90% layar (Detail Menu, PRD 6.3). */
   size?: 'auto' | 'large';
   desktopWidth?: number;
+  /** Sheet sementara selama isinya dimuat; sheet asli yang menggantikannya melanjutkan geraknya. */
+  placeholder?: boolean;
 }
 
 /** Bottom sheet iOS di HP (tarik ke bawah untuk menutup), modal tengah di desktop. */
-export function Sheet({ open, onClose, label, children, size = 'auto', desktopWidth = 560 }: SheetProps) {
+export function Sheet({
+  open,
+  onClose,
+  label,
+  children,
+  size = 'auto',
+  desktopWidth = 560,
+  placeholder = false,
+}: SheetProps) {
   const hydrated = useHydrated();
   const isDesktop = useIsDesktop();
   const reduceMotion = usePrefersReducedMotion();
   const dragControls = useDragControls();
   const panelRef = useRef<HTMLDivElement>(null);
+  const panelY = useMotionValue<string | number>(0);
+  const panelScale = useMotionValue(1);
+  const panelOpacity = useMotionValue(1);
+  const backdropOpacity = useMotionValue(1);
+  // Sheet pengganti baru dianggap terlihat setelah animasi masuknya berjalan.
+  const enteredRef = useRef(false);
+  // Dibaca saat render pertama: sheet pengganti baru dilepas setelah sheet ini dipasang.
+  const [handoff] = useState(() => (placeholder ? null : (placeholderPose?.() ?? null)));
   useOverlay(open, onClose);
+
+  useEffect(() => {
+    if (!placeholder) return;
+    const pose = () =>
+      enteredRef.current
+        ? {
+            panel: { y: panelY.get(), scale: panelScale.get(), opacity: panelOpacity.get() },
+            backdrop: backdropOpacity.get(),
+          }
+        : null;
+    placeholderPose = pose;
+    return () => {
+      if (placeholderPose === pose) placeholderPose = null;
+    };
+  }, [placeholder, panelY, panelScale, panelOpacity, backdropOpacity]);
 
   useEffect(() => {
     if (open) panelRef.current?.focus();
@@ -83,10 +127,11 @@ export function Sheet({ open, onClose, label, children, size = 'auto', desktopWi
         <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center lg:p-6">
           <motion.div
             className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
-            initial={{ opacity: 0 }}
+            initial={{ opacity: handoff ? handoff.backdrop : 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
+            style={{ opacity: backdropOpacity }}
             onClick={onClose}
             aria-hidden="true"
           />
@@ -97,7 +142,11 @@ export function Sheet({ open, onClose, label, children, size = 'auto', desktopWi
             aria-label={label}
             tabIndex={-1}
             {...motionProps}
+            initial={handoff ? handoff.panel : motionProps.initial}
             transition={reduceMotion ? { duration: 0.2 } : { type: 'spring', stiffness: 380, damping: 36, mass: 0.9 }}
+            onAnimationStart={() => {
+              enteredRef.current = true;
+            }}
             drag={isDesktop || reduceMotion ? false : 'y'}
             dragControls={dragControls}
             dragListener={false}
@@ -106,7 +155,12 @@ export function Sheet({ open, onClose, label, children, size = 'auto', desktopWi
             onDragEnd={(_, info) => {
               if (info.offset.y > 110 || info.velocity.y > 600) onClose();
             }}
-            style={isDesktop ? { maxWidth: desktopWidth } : undefined}
+            style={{
+              y: panelY,
+              scale: panelScale,
+              opacity: panelOpacity,
+              maxWidth: isDesktop ? desktopWidth : undefined,
+            }}
             className={cn(
               'relative flex w-full flex-col overflow-hidden bg-surface shadow-float outline-none',
               isDesktop ? 'max-h-[88vh] rounded-card' : 'max-h-[94dvh] rounded-t-sheet',

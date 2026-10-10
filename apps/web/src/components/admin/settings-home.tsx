@@ -1,6 +1,6 @@
 'use client';
 
-import { BowlLoader } from '@/components/brand/food-art';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import {
   Bell,
   Clock,
@@ -22,7 +22,7 @@ export function SettingsHome() {
     return (
       <>
         <PageHeader title="Pengaturan" />
-        <BowlLoader />
+        <WarungLoader topic="pengaturan" />
       </>
     );
   }

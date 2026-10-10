@@ -5,12 +5,12 @@ import { fetchMenu } from '@/lib/server-api';
 
 export const metadata: Metadata = { title: 'Semua Menu' };
 
-export default async function MenuPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ kategori?: string; cari?: string }>;
-}) {
-  const [{ kategori, cari }, menu] = await Promise.all([searchParams, fetchMenu()]);
+/**
+ * Statis (diperbarui tiap 10 detik) agar ikut ter-prefetch penuh dan pindah dari Home terasa
+ * instan. ?kategori= dan ?cari= dari link Home dibaca di browser oleh MenuView.
+ */
+export default async function MenuPage() {
+  const menu = await fetchMenu();
   if (!menu) return <LoadError />;
-  return <MenuView menu={menu} initialCategory={kategori} autoFocusSearch={cari === '1'} />;
+  return <MenuView menu={menu} />;
 }

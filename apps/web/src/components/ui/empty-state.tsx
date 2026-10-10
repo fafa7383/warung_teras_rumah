@@ -39,7 +39,3 @@ export function EmptyState({
     </div>
   );
 }
-
-export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('skeleton', className)} aria-hidden="true" />;
-}

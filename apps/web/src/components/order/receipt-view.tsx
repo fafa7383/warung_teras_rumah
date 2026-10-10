@@ -13,8 +13,9 @@ import { toPng } from 'html-to-image';
 import { motion } from 'motion/react';
 import { useRef, useState } from 'react';
 import { LogoMark } from '@/components/brand/logo';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { Button, ButtonLink } from '@/components/ui/button';
-import { EmptyState, Skeleton } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Download, Share } from '@/components/ui/icons';
 import { BackButton } from '@/components/ui/page-header';
 import { cn } from '@/lib/cn';
@@ -171,9 +172,7 @@ export function ReceiptView({ token }: { token: string }) {
     return (
       <>
         {header}
-        <div className="mx-auto mt-6 w-full max-w-[360px] px-4">
-          <Skeleton className="h-[520px] rounded-section" />
-        </div>
+        <WarungLoader topic="struk" fill />
       </>
     );
   }

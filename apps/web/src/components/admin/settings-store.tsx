@@ -9,7 +9,7 @@ import {
 } from '@wtr/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { BowlLoader } from '@/components/brand/food-art';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/controls';
 import { FieldRow, TextArea, TextInput } from '@/components/ui/fields';
@@ -92,7 +92,7 @@ export function StoreProfileSettings() {
   return (
     <>
       <SubpageHeader title="Profil Warung" />
-      {data ? <StoreProfileForm settings={data} /> : <BowlLoader />}
+      {data ? <StoreProfileForm settings={data} /> : <WarungLoader topic="pengaturan" />}
     </>
   );
 }
@@ -175,7 +175,7 @@ export function HoursSettings() {
   return (
     <>
       <SubpageHeader title="Jam Operasional" />
-      {data ? <HoursForm settings={data} /> : <BowlLoader />}
+      {data ? <HoursForm settings={data} /> : <WarungLoader topic="pengaturan" />}
     </>
   );
 }
@@ -229,7 +229,7 @@ export function QrisSettings() {
   return (
     <>
       <SubpageHeader title="QRIS" />
-      {data ? <QrisForm settings={data} /> : <BowlLoader />}
+      {data ? <QrisForm settings={data} /> : <WarungLoader topic="pengaturan" />}
     </>
   );
 }

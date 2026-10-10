@@ -18,7 +18,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { BowlLoader } from '@/components/brand/food-art';
+import { WarungLoader } from '@/components/brand/warung-loader';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Copy, Flame, MapPin, MessageCircle, Phone, X } from '@/components/ui/icons';
@@ -119,7 +119,7 @@ function PaymentProof({ order }: { order: AdminOrderDto }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={proof.data.url} alt="Bukti bayar QRIS" className="size-full object-contain" />
           ) : (
-            <span className="text-footnote text-label-2">{proof.isError ? 'Gagal memuat bukti' : 'Memuat bukti…'}</span>
+            <span className="text-footnote text-label-2">{proof.isError ? 'Gagal memuat bukti' : 'Ngambil foto buktinya…'}</span>
           )}
         </button>
         <p className="rounded-control bg-yellow-soft p-3 text-subhead text-yellow-text">
@@ -148,7 +148,7 @@ export function AdminOrderDetail({ orderId }: { orderId: string }) {
     markSeen(orderId);
   }, [orderId, markSeen]);
 
-  if (isPending) return <BowlLoader label="Memuat pesanan…" />;
+  if (isPending) return <WarungLoader topic="admin-pesanan" fill />;
   if (isError || !order) return <EmptyState title="Pesanan tidak ditemukan" />;
 
   const webOrigin = typeof window === 'undefined' ? '' : window.location.origin;
